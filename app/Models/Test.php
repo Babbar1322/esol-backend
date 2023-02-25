@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Test extends Model
 {
     use HasFactory;
+
+    protected $guarded = [];
+
+    public function test_groups()
+    {
+        return $this->hasMany(TestGroup::class);
+    }
 }
