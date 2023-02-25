@@ -1,0 +1,33 @@
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml
+/.vscode
+
+# Laravel-specific files/directories
+.env
+vendor/
+node_modules/
+public/storage/
+storage/*.key
+public/hot/
+public/web.config
+
+# Composer-generated files/directories
+vendor/
+composer.lock
+composer.phar
+
+# NPM-generated files/directories
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Other generated files/directories
+Homestead.yaml
+Homestead.json
+.idea/
+*.log
+*.swp
+.DS_Store
+Thumbs.db
