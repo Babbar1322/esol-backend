@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -23,14 +25,23 @@ Route::get('/', function () {
 Auth::routes();
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::group(["middleware" => "auth", "prefix" => "admin"], function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('admin');
-    Route::get('add-new-test', [DashboardController::class, 'addNewTest'])->name('admin.add-new-test');
-    Route::get('all-tests', [DashboardController::class, 'allTests'])->name('admin.all-tests');
-    Route::get('add-test-questions/{id}', [DashboardController::class, 'addTestQuestions'])->name('admin.add-test-questions');
-});
-
 Route::group(["middleware" => "auth"], function () {
+    Route::group(["prefix" => "admin"], function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('admin');
+        Route::get('add-new-test', [DashboardController::class, 'addNewTest'])->name('admin.add-new-test');
+        Route::get('all-tests', [DashboardController::class, 'allTests'])->name('admin.all-tests');
+        Route::get('add-test-questions/{id}', [DashboardController::class, 'addTestQuestions'])->name('admin.add-test-questions');
+
+        // Student Routes
+        Route::get('add-new-student', [DashboardController::class, 'addNewStudent'])->name('admin.add-new-student');
+        Route::get('all-students', [DashboardController::class, 'allStudents'])->name('admin.all-students');
+    });
+
+    // Route::post('login', [LoginController::class, 'login'])->name('login');
+
     Route::post('add-new-test', [TestController::class, 'addNewTest'])->name('add-new-test');
     Route::get('delete-test', [TestController::class, 'deleteTest'])->name('delete-test');
+
+    // Student Routes
+    Route::post('add-new-student', [UserController::class, 'addNewStudent'])->name('add-new-student');
 });

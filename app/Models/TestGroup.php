@@ -17,6 +17,6 @@ class TestGroup extends Model
     }
     public function test_questions()
     {
-        return $this->hasMany(TestQuestions::class);
+        return $this->hasMany(TestQuestion::class);
     }
 }

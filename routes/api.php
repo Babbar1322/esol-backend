@@ -24,7 +24,14 @@ Route::group(["middleware" => "auth:sanctum"], function () {
     Route::get('user', function (Request $request) {
         return $request->user();
     });
+    Route::post('logout', [UserController::class, 'logout']);
+
+    // Routes for Test
     Route::get('get-all-test', [TestController::class, 'getAllTest']);
+    Route::get('get-test-details', [TestController::class, 'getTestDetails']);
+
+    // Submit Test
+    Route::post('submit-test', [TestController::class, 'submitTest']);
 });
 Route::post('login', [UserController::class, 'login']);
 Route::post('add-test-questions', [TestController::class, 'addTestQuestions']);
