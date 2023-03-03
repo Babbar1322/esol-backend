@@ -17,13 +17,13 @@
                     </nav>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link has-sub"><i class="ri-user-4-line"></i> <span>Students</span></a>
+                    <a href="#" class="nav-link has-sub {{ request()->is('admin/all-students') ? 'active' : request()->is('admin/add-new-student') ? 'active' : '' }}"><i class="ri-user-4-line"></i> <span>Students</span></a>
                     <nav class="nav nav-sub">
-                        <a href="#" class="nav-sub-link">All Students</a>
-                        <a href="#" class="nav-sub-link">Add New Student</a>
+                        <a href="{{route('admin.all-students')}}" class="nav-sub-link {{ request()->is('admin/all-students') ? 'active' : '' }}">All Students</a>
+                        <a href="{{route('admin.add-new-student')}}" class="nav-sub-link {{ request()->is('admin/add-new-student') ? 'active' : '' }}">Add New Student</a>
                     </nav>
                 </li>
             </ul>
-        </div><!-- nav-group -->
-    </div><!-- sidebar-body -->
-</div><!-- sidebar -->
+        </div>
+    </div>
+</div>
