@@ -3,3 +3,15 @@
     height: 2.5rem !important;
     padding: 0;
 }
+
+.invalid-input {
+    border: 2px solid red;
+    color: red;
+}
+
+.invalid-input::placeholder,
+.invalid-input::-moz-placeholder,
+.invalid-input::-webkit-input-placeholder {
+    color: red !important;
+    font-weight: 600;
+}

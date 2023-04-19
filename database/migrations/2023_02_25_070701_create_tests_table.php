@@ -17,6 +17,8 @@ class CreateTestsTable extends Migration
             $table->id();
             $table->string('test_type');
             $table->string('test_name');
+            $table->string('time');
+            $table->integer('status')->default(0);
             $table->timestamps();
         });
     }

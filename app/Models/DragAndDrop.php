@@ -5,19 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Test extends Model
+class DragAndDrop extends Model
 {
     use HasFactory;
-
     protected $guarded = [];
 
-    public function test_groups()
+    public function test_group()
     {
-        return $this->hasMany(TestGroup::class);
+        return $this->belongsTo(TestGroup::class);
     }
 
-    public function submitted_tests()
+    public function test_questions()
     {
-        return $this->hasMany(SubmittedTest::class);
+        return $this->hasMany(TestQuestion::class);
     }
 }

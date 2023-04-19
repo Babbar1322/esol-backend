@@ -30,7 +30,11 @@ Route::group(["middleware" => "auth"], function () {
         Route::get('/', [DashboardController::class, 'index'])->name('admin');
         Route::get('add-new-test', [DashboardController::class, 'addNewTest'])->name('admin.add-new-test');
         Route::get('all-tests', [DashboardController::class, 'allTests'])->name('admin.all-tests');
+        Route::get('add-test-groups/{id}', [DashboardController::class, 'addTestGroups'])->name('admin.add-test-groups');
         Route::get('add-test-questions/{id}', [DashboardController::class, 'addTestQuestions'])->name('admin.add-test-questions');
+        Route::get('add-dnd-questions/{id}', [DashboardController::class, 'addDNDQuestions'])->name('admin.add-dnd-questions');
+        Route::get('combine-tests', [DashboardController::class, 'combineTests'])->name('admin.combine-tests');
+        Route::get('review-writing-test/{id}', [DashboardController::class, 'reviewWritingTest'])->name('admin.review-writing-test');
 
         // Student Routes
         Route::get('add-new-student', [DashboardController::class, 'addNewStudent'])->name('admin.add-new-student');
@@ -40,7 +44,10 @@ Route::group(["middleware" => "auth"], function () {
     // Route::post('login', [LoginController::class, 'login'])->name('login');
 
     Route::post('add-new-test', [TestController::class, 'addNewTest'])->name('add-new-test');
+    Route::post('add-test-group', [TestController::class, 'addTestGroup'])->name('add-test-group');
+    Route::get('publish-test', [TestController::class, 'publishTest'])->name('publish-test');
     Route::get('delete-test', [TestController::class, 'deleteTest'])->name('delete-test');
+    Route::post('combine-tests', [TestController::class, 'combineTests'])->name('combine-tests');
 
     // Student Routes
     Route::post('add-new-student', [UserController::class, 'addNewStudent'])->name('add-new-student');

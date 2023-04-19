@@ -30,13 +30,19 @@ class UserController extends Controller
 
     public function logout(Request $request)
     {
-        $user = $request->user();
-        $user->tokens()->delete();
+        // $user = $request->user();
+        // $user->tokens()->delete();
         return response()->json('User logged out successfully', 200);
     }
 
     public function addNewStudent(Request $request)
     {
+        $request->validate([
+            'student_name' => "required|string",
+            'student_email' => "required|string",
+            'student_phone' => "required",
+            'student_password' => 'required'
+        ]);
         if (!$request->student_email || !$request->student_name || !$request->student_phone || !$request->student_password) {
             return redirect()->back()->withErrors(["error" => "All fields are required"]);
         }

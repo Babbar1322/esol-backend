@@ -11,6 +11,10 @@ class TestQuestion extends Model
 
     protected $guarded = [];
 
+    protected $hidden = [
+        'answer'
+    ];
+
     public function test_groups()
     {
         return $this->belongsTo(TestGroup::class);

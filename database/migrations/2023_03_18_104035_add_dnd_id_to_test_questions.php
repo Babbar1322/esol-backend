@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddTestStatusInTests extends Migration
+class AddDndIdToTestQuestions extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,9 @@ class AddTestStatusInTests extends Migration
      */
     public function up()
     {
-        Schema::table('tests', function (Blueprint $table) {
-            $table->integer('status')->after('test_name')->default(0);
+        Schema::table('test_questions', function (Blueprint $table) {
+            // $table->integer('dnd_id')->after('answer');
+            $table->unsignedBigInteger('dnd_id')->after('answer');
         });
     }
 
@@ -25,8 +26,8 @@ class AddTestStatusInTests extends Migration
      */
     public function down()
     {
-        Schema::table('tests', function (Blueprint $table) {
-            $table->integer('status')->after('test_name')->default(0);
+        Schema::table('test_questions', function (Blueprint $table) {
+            $table->dropColumn('dnd_id')->after('answer');
         });
     }
 }

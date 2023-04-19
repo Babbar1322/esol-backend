@@ -38,21 +38,32 @@
                         <th scope="col">Name</th>
                         <th scope="col">Type</th>
                         <th scope="col">Groups</th>
+                        <th scope="col">Total Questions</th>
+                        <th scope="col">Added On</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
+                @if(count($data) > 0)
                     @foreach ($data as $test)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $test->test_name }}</td>
                             <td style="text-transform: capitalize;">{{ $test->test_type }}</td>
                             <td>{{ count($test->test_groups) }}</td>
+                            <td>{{ $test->total_questions }}</td>
+                            <td>{{ $test->created_at }}</td>
                             <td>
                                 <a href="{{ route('admin.add-test-questions', ['id' => $test->id]) }}"
                                     class="btn btn-success">Add Questions</a>
-                            </td>
-                            <td>
+                                <a href="{{ route('admin.add-dnd-questions', ['id' => $test->id]) }}"
+                                    class="btn btn-success">Add Drag and Drop Questions</a>
+                                @if ($test->status === 0)
+                                    <a href="{{ route('publish-test', ['id' => $test->id]) }}"
+                                        class="btn btn-primary">Publish</a>
+                                @else
+                                    <button class="btn btn-secondary">Hide</button>
+                                @endif
                                 <button type="button" class="btn btn-danger deleteTest" test-id="{{ $test->id }}"
                                     data-bs-toggle="modal" data-bs-target="#confirmation">
                                     <i class="ri-delete-bin-6-fill"></i>
@@ -61,6 +72,14 @@
                             {{-- <td><a href="{{route('delete-test', ['id' => $test->id])}}" class="btn btn-danger"><i class="ri-delete-bin-6-fill"></i></a></td> --}}
                         </tr>
                     @endforeach
+                @else
+                    <tr>
+                        <td colspan="7" class="text-center"><h3>No Tests Found</h3></td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" class="text-center"><a href="{{route('admin.add-new-test')}}" class="btn btn-primary px-3 rounded-pill shadow">Add New Test</a></td>
+                    </tr>
+                @endif
                 </tbody>
             </table>
         </div>
@@ -69,7 +88,8 @@
     <script>
         $(document).ready(function() {
             $('.deleteTest').click(function() {
-                $('#deleteBtn').attr('href', 'delete-test/' + $(this).attr('test-id'));
+                $('#deleteBtn').attr('href', '{{ route('delete-test') }}' + "?id=" + $(this).attr(
+                    'test-id'));
             })
         })
     </script>
