@@ -18,11 +18,8 @@ class CreateCombineTestsTable extends Migration
             $table->unsignedBigInteger('reading_test_id')->nullable();
             $table->unsignedBigInteger('listening_test_id')->nullable();
             $table->unsignedBigInteger('writing_test_id')->nullable();
-            // $table->string('reading_test_name')->nullable();
-            // $table->string('listening_test_name')->nullable();
-            // $table->string('writing_test_name')->nullable();
             $table->string('name')->nullable();
-            // relation with test table
+            $table->integer('status')->default(0);
             $table->foreign('reading_test_id')->references('id')->on('tests')->onDelete('cascade');
             $table->foreign('listening_test_id')->references('id')->on('tests')->onDelete('cascade');
             $table->foreign('writing_test_id')->references('id')->on('tests')->onDelete('cascade');

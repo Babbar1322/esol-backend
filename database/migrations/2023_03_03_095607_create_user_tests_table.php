@@ -15,11 +15,9 @@ class CreateUserTestsTable extends Migration
     {
         Schema::create('user_tests', function (Blueprint $table) {
             $table->id();
-            // $table->integer('user_id');
-            // $table->integer('test_id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('test_id');
-            $table->integer('start_time');
+            $table->string('start_time');
             $table->integer('total_questions');
             $table->string('total_score')->nullable();
             $table->string('status')->default('pending');

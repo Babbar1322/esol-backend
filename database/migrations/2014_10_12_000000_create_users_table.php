@@ -21,6 +21,7 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->string('show_pass');
             $table->integer('is_admin')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

@@ -15,10 +15,12 @@ class CreateTestsTable extends Migration
     {
         Schema::create('tests', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('media_id')->nullable();
             $table->string('test_type');
             $table->string('test_name');
             $table->string('time');
             $table->integer('status')->default(0);
+            $table->boolean('is_combined')->default(0);
             $table->timestamps();
         });
     }

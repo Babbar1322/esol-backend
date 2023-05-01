@@ -16,8 +16,7 @@
 @if (count($data->test_groups) == 0)
 <div class="card card-one mt-3 shadow">
     <div class="card-body py-3 text-center">
-        <img src="https://cdn-icons-png.flaticon.com/512/1380/1380641.png
-                " draggable="false" style="max-width: 15%">
+        <img src="https://cdn-icons-png.flaticon.com/512/1380/1380641.png" draggable="false" style="max-width: 15%">
         <h3 class="card-title">No Groups Found in This Test</h3>
     </div>
 </div>
@@ -87,7 +86,7 @@
         }).then(res => {
             // Showing Success Message at The Top of Form
             let alert =
-                `<div class="alert alert-${color} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
+                `<div class="alert alert-${color} alert-dismissible fade show" role="alert">${res.data}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
             $('#alert-box').append(alert);
 
             // Clearing The Inputs

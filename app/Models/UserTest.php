@@ -10,4 +10,9 @@ class UserTest extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function tests()
+    {
+        return $this->belongsTo(Test::class);
+    }
 }

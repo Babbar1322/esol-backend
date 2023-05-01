@@ -15,7 +15,6 @@ class CreateTestGroupsTable extends Migration
     {
         Schema::create('test_groups', function (Blueprint $table) {
             $table->id();
-            // $table->integer('test_id')->unsigned();
             $table->unsignedBigInteger('test_id');
             $table->string('group_name');
             $table->text('group_content');

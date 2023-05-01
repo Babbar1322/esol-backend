@@ -21,6 +21,10 @@
             </ol>
             <h4 class="main-title mb-0">List of All Tests</h4>
         </div>
+        <div>
+            <a href="{{route('admin.add-new-test')}}" class="btn btn-primary rounded-pill shadow px-4">Add New Test</a>
+            <a href="{{route('admin.combine-tests')}}" class="btn btn-success rounded-pill shadow px-4 ms-3">Combine Tests</a>
+        </div>
     </div>
 
     <div class="card card-one mt-3 shadow">
@@ -54,17 +58,19 @@
                             <td>{{ $test->total_questions }}</td>
                             <td>{{ $test->created_at }}</td>
                             <td>
-                                <a href="{{ route('admin.add-test-questions', ['id' => $test->id]) }}"
-                                    class="btn btn-success">Add Questions</a>
-                                <a href="{{ route('admin.add-dnd-questions', ['id' => $test->id]) }}"
-                                    class="btn btn-success">Add Drag and Drop Questions</a>
                                 @if ($test->status === 0)
-                                    <a href="{{ route('publish-test', ['id' => $test->id]) }}"
-                                        class="btn btn-primary">Publish</a>
+                                    <a href="{{ route('admin.add-test-questions', ['id' => $test->id]) }}"
+                                       class="btn btn-success rounded-pill">Add Questions</a>
+                                    <a href="{{ route('admin.add-dnd-questions', ['id' => $test->id]) }}"
+                                       class="btn btn-success rounded-pill">Add Drag and Drop Questions</a>
+                                    <a href="{{ route('change-test-status', ['id' => $test->id, 'status' => 1]) }}"
+                                        class="btn btn-primary rounded-pill">Publish</a>
+                                    <a href="{{ route('admin.add-test-groups', ['id' => $test->id]) }}"
+                                        class="btn btn-primary rounded-pill">Add Test Groups</a>
                                 @else
-                                    <button class="btn btn-secondary">Hide</button>
+                                    <a href="{{ route('change-test-status', ['id' => $test->id, 'status' => 0]) }}" class="btn btn-secondary rounded-pill">Hide</a>
                                 @endif
-                                <button type="button" class="btn btn-danger deleteTest" test-id="{{ $test->id }}"
+                                <button type="button" class="btn btn-danger deleteTest rounded-pill" test-id="{{ $test->id }}"
                                     data-bs-toggle="modal" data-bs-target="#confirmation">
                                     <i class="ri-delete-bin-6-fill"></i>
                                 </button>

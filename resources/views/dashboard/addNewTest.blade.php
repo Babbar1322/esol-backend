@@ -19,7 +19,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         @endif
-        <form action="{{ route('add-new-test') }}" method="POST">
+        <form action="{{ route('add-new-test') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="mb-3">
                 <label for="testName" class="form-label">Test Name</label>
@@ -75,37 +75,29 @@
 {{-- <script src="{{asset('dashboard/js/jquery.richtext.min.js')}}"></script> --}}
 <script>
     $(document).ready(() => {
-            $('.add-btn').click((e) => {
-                e.preventDefault();
-                let newRowAdd =
-                    `<hr class="hr">
-                    <div class="row align-items-center">
-                        <div class="col-11">
-                            <div>
-                                <label for="groupName" class="form-label">Group Name</label>
-                                <input type="text" name="group_name[]" class="form-control" id="groupName" placeholder="Enter Group Name">
-                            </div>
-                            <div class="mt-2">
-                                <label for="groupName" class="form-label">Group Content</label>
-                                <textarea class="form-control" name="group_content[]" rows="6" id="groupContent" placeholder="Enter Group Content"></textarea>
-                            </div>
-                        </div>
-                        <div class="col-1">
-                            <button class="btn btn-danger rounded-pill remove-btn">
-                                <i class="ri-delete-bin-6-line"></i>
-                            </button>
-                        </div>
-                    </div>`;
-                $('#newinput').append(newRowAdd);
+            $('#testType').change(function(){
+                let testType = $(this).val();
+                if(testType === 'listening'){
+                    $('#newinput').append(`<div class="mb-3"><label>Choose Audio File (Max Size is 30MB)</label><input type="file" name="test_audio" accept="audio/*" class="form-control"></div>`).hide().slideDown(500);
+                } else {
+                    $('#newinput').slideUp(500, function(){
+                        $(this).empty();
+                    });
+                }
             });
-            $('#newinput').on('click', '.remove-btn', function(e) {
-                e.preventDefault();
-                // console.log($(this).parents('.row'));
-                // $(this).parents('.row').remove();
-                // $('.hr').remove();
-                $(this).closest('.row').prev('hr').remove();
-                $(this).closest('.row').remove();
+            // disable button after submit form
+            $('form').submit(function(){
+                // check if file size is greater than 30MB
+                let testType = $('#testType').val();
+                if(testType === 'listening'){
+                    let fileSize = $('input[name="test_audio"]')[0].files[0].size;
+                    if(fileSize > 30000000){
+                        alert('File size is greater than 30MB');
+                        return false;
+                    }
+                }
+                $('button[type="submit"]').attr('disabled', true);
             });
-        })
+        });
 </script>
 @endsection

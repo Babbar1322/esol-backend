@@ -15,16 +15,15 @@ class CreateSubmittedTestsTable extends Migration
     {
         Schema::create('submitted_tests', function (Blueprint $table) {
             $table->id();
-            // $table->integer('test_id');
-            // $table->integer('user_id');
-            // $table->integer('question_id');
             $table->unsignedBigInteger('test_id');
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('question_id');
-            $table->integer('question_number');
-            $table->string('question_type');
-            $table->string('question_value');
-            $table->integer('is_correct');
+            $table->unsignedBigInteger('question_id')->nullable();
+            $table->integer('question_number')->nullable();
+            $table->string('question_type')->nullable();
+            $table->text('question_value')->nullable();
+            $table->boolean('is_correct');
+            $table->integer('marks')->nullable();
+            $table->boolean('is_checked')->nullable();
             $table->timestamps();
             $table->foreign('test_id')->references('id')->on('tests')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

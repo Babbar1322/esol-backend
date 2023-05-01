@@ -15,8 +15,6 @@ class CreateDragAndDropsTable extends Migration
     {
         Schema::create('drag_and_drops', function (Blueprint $table) {
             $table->id();
-            // $table->integer('test_id');
-            // $table->integer('test_group_id');
             $table->unsignedBigInteger('test_id');
             $table->unsignedBigInteger('test_group_id');
             $table->string('question');

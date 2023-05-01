@@ -30,6 +30,7 @@ Route::post('logout', [UserController::class, 'logout']);
 
 // Routes for Test
 Route::get('get-all-test', [TestController::class, 'getAllTest']);
+Route::get('get-combined-test/{id}', [TestController::class, 'getCombinedTest']);
 Route::get('get-test-details', [TestController::class, 'getTestDetails']);
 
 // Submit Test
@@ -41,6 +42,7 @@ Route::post('review-test', [TestController::class, 'reviewTest']);
 Route::post('login', [UserController::class, 'login']);
 Route::post('add-test-questions', [TestController::class, 'addTestQuestions']);
 Route::post('add-dnd-questions', [TestController::class, 'addDNDQuestions']);
+Route::post('add-image-questions', [TestController::class, 'addImageQuestions']);
 Route::get('test', function (Request $req) {
     $token = $req->query('token');
     $find = PersonalAccessToken::findToken($token);

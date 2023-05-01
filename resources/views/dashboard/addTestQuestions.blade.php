@@ -59,8 +59,13 @@
                             placeholder="Enter Answer">
                     </div>
                 </div>
-                <div class="d-grid">
+                <div class="row">
+                    <div class="col">
                     <button class="btn btn-success w-25 mt-3 add-btn" onclick="submitData()">Add Question</button>
+                    </div>
+                    <div class="col">
+                    <a class="btn btn-primary w-25 mt-3 add-btn" href="{{route('admin.add-image-questions', ['id' => $data->id])}}">Add Image Question</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -102,7 +107,7 @@
             }).then(res => {
                 // Showing Success Message at The Top of Form
                 let alert =
-                    `<div class="alert alert-${color} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
+                    `<div class="alert alert-${color} alert-dismissible fade show" role="alert">${res.data}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
                 $('#alert-box').append(alert);
 
                 // Clearing The Inputs
