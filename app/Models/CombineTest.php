@@ -25,4 +25,9 @@ class CombineTest extends Model
     {
         return $this->belongsTo(Test::class, 'listening_test_id');
     }
+
+    public function allocated_tests()
+    {
+        return $this->hasMany(AllocatedTest::class);
+    }
 }

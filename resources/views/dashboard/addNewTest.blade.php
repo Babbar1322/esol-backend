@@ -78,7 +78,7 @@
             $('#testType').change(function(){
                 let testType = $(this).val();
                 if(testType === 'listening'){
-                    $('#newinput').append(`<div class="mb-3"><label>Choose Audio File (Max Size is 30MB)</label><input type="file" name="test_audio" accept="audio/*" class="form-control"></div>`).hide().slideDown(500);
+                    $('#newinput').append(`<div class="mb-3"><label>Choose Audio File (Max Size is 70MB)</label><input type="file" name="test_audio" accept="audio/*" class="form-control"></div>`).hide().slideDown(500);
                 } else {
                     $('#newinput').slideUp(500, function(){
                         $(this).empty();

@@ -120,58 +120,6 @@
         </div>
     </div>
 
-{{--    <div class="row g-3 justify-content-center">--}}
-{{--        <div class="col-md-4 col-xl-3">--}}
-{{--            <div class="card card-one shadow">--}}
-{{--                <div class="card-body">--}}
-{{--                    <h3 class="card-value mb-1">{{ $users }}</h3>--}}
-{{--                    <label class="card-title fw-medium text-dark mb-1">Students</label>--}}
-{{--                </div><!-- card-body -->--}}
-{{--            </div><!-- card-one -->--}}
-{{--        </div><!-- col -->--}}
-{{--        <div class="col-md-4 col-xl-3">--}}
-{{--            <div class="card card-one shadow">--}}
-{{--                <div class="card-body">--}}
-{{--                    <h3 class="card-value mb-1">{{ $tests }}</h3>--}}
-{{--                    <label class="card-title fw-medium text-dark mb-1">Tests</label>--}}
-{{--                </div><!-- card-body -->--}}
-{{--            </div><!-- card-one -->--}}
-{{--        </div><!-- col -->--}}
-{{--        <div class="col-md-4 col-xl-3">--}}
-{{--            <div class="card card-one shadow">--}}
-{{--                <div class="card-body">--}}
-{{--                    <h3 class="card-value mb-1">{{$user_tests}}</h3>--}}
-{{--                    <label class="card-title fw-medium text-dark mb-1">Test Taken</label>--}}
-{{--                </div><!-- card-body -->--}}
-{{--            </div><!-- card-one -->--}}
-{{--        </div><!-- col -->--}}
-{{--    </div><div class="row g-3 justify-content-center">--}}
-{{--        <div class="col-md-4 col-xl-3">--}}
-{{--            <div class="card card-one shadow">--}}
-{{--                <div class="card-body">--}}
-{{--                    <h3 class="card-value mb-1">{{ $users }}</h3>--}}
-{{--                    <label class="card-title fw-medium text-dark mb-1">Students</label>--}}
-{{--                </div><!-- card-body -->--}}
-{{--            </div><!-- card-one -->--}}
-{{--        </div><!-- col -->--}}
-{{--        <div class="col-md-4 col-xl-3">--}}
-{{--            <div class="card card-one shadow">--}}
-{{--                <div class="card-body">--}}
-{{--                    <h3 class="card-value mb-1">{{ $tests }}</h3>--}}
-{{--                    <label class="card-title fw-medium text-dark mb-1">Tests</label>--}}
-{{--                </div><!-- card-body -->--}}
-{{--            </div><!-- card-one -->--}}
-{{--        </div><!-- col -->--}}
-{{--        <div class="col-md-4 col-xl-3">--}}
-{{--            <div class="card card-one shadow">--}}
-{{--                <div class="card-body">--}}
-{{--                    <h3 class="card-value mb-1">{{$user_tests}}</h3>--}}
-{{--                    <label class="card-title fw-medium text-dark mb-1">Test Taken</label>--}}
-{{--                </div><!-- card-body -->--}}
-{{--            </div><!-- card-one -->--}}
-{{--        </div><!-- col -->--}}
-{{--    </div><!-- row -->--}}
-
     {{-- <div class="card card-one mt-3 shadow">
         <div class="card-header">
             <h6 class="card-title">Organic Visits &amp; Conversions</h6>

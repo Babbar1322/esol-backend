@@ -17,7 +17,7 @@ class CreateTestGroupsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('test_id');
             $table->string('group_name');
-            $table->text('group_content');
+            $table->text('group_content')->nullable();
             $table->integer('total_questions')->default(0);
             $table->timestamps();
             $table->foreign('test_id')->references('id')->on('tests')->onDelete('cascade');

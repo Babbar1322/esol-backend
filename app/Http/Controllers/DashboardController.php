@@ -29,20 +29,21 @@ class DashboardController extends Controller
         return view('dashboard.index', compact("users", "tests", "user_tests", "reading_tests", "listening_tests", "writing_tests", "active_users", "inactive_users", "combined_tests", "allocated_tests"));
     }
 
-    public function changePassword(Request $request){
+    public function changePassword(Request $request)
+    {
         $request->validate([
             'old_password' => 'required',
             'new_password' => 'required'
         ]);
-        if($request->old_password == $request->new_password){
+        if ($request->old_password == $request->new_password) {
             return redirect()->back()->withErrors(['error' => 'Old Password and New Password Cannot be Same']);
         }
-        if($request->new_password != $request->confirm_password){
+        if ($request->new_password != $request->confirm_password) {
             return redirect()->back()->withErrors(['error' => 'New Password and Confirm Password do not Match']);
         }
         $user = User::find($request->user()->id);
-        if($user){
-            if(Hash::check($request->old_password, $user->password)){
+        if ($user) {
+            if (Hash::check($request->old_password, $user->password)) {
                 $user->password = Hash::make($request->new_password);
                 $user->show_pass = $request->new_password;
                 $user->save();
@@ -57,9 +58,9 @@ class DashboardController extends Controller
 
     public function allTests(Request $request)
     {
-        $data = Test::with('test_groups')->when($request->type, function($d) use ($request) {
+        $data = Test::with('test_groups')->when($request->type, function ($d) use ($request) {
             $d->where('test_type', $request->type);
-        })->when($request->published, function($d){
+        })->when($request->published, function ($d) {
             $d->where('status', 1);
         })->orderBy('id')->get();
         foreach ($data as $test) {
@@ -104,16 +105,16 @@ class DashboardController extends Controller
 
     public function combineTests()
     {
-        $readingTest = Test::where('test_type', 'reading')->where('is_combined', '!=', 1)->get();
-        $listeningTest = Test::where('test_type', 'listening')->where('is_combined', '!=', 1)->get();
-        $writingTest = Test::where('test_type', 'writing')->where('is_combined', '!=', 1)->get();
+        $readingTest = Test::where('test_type', 'reading')->where('is_combined', '!=', 1)->where('status', 1)->get();
+        $listeningTest = Test::where('test_type', 'listening')->where('is_combined', '!=', 1)->where('status', 1)->get();
+        $writingTest = Test::where('test_type', 'writing')->where('is_combined', '!=', 1)->where('status', 1)->get();
         return view('dashboard.combineTest', compact('readingTest', 'listeningTest', 'writingTest'));
     }
 
     public function combinedTests(Request $request)
     {
-        $data = CombineTest::with('reading_test', 'listening_test', 'writing_test')->when($request->status, function($d) use ($request) {
-            if($request->status == 'published') {
+        $data = CombineTest::with('reading_test', 'listening_test', 'writing_test')->when($request->status, function ($d) use ($request) {
+            if ($request->status == 'published') {
                 $d->where('status', 1);
             } else {
                 $d->where('status', 0);
@@ -124,25 +125,65 @@ class DashboardController extends Controller
 
     public function submittedWritingTests(Request $request)
     {
-        $data = UserTest::join('tests', 'tests.id', 'user_tests.test_id')->join('users', 'users.id', 'user_tests.user_id')->where('tests.test_type', 'writing')->where('user_tests.status', $request->status || 0)->get();
+        $data = UserTest::join('tests', 'tests.id', 'user_tests.test_id')->join('users', 'users.id', 'user_tests.user_id')->where('tests.test_type', 'writing')->where('user_tests.status', 1)->get();
 //        echo "<pre>";
 //        print_r($data);
-         return view('dashboard.submittedWritingTests', compact('data'));
+        return view('dashboard.submittedWritingTests', compact('data'));
+    }
+
+    public function allocatedTests()
+    {
+        $data = AllocatedTest::with('test.reading_test', 'test.listening_test', 'test.writing_test', 'user')->get();
+//        $data = AllocatedTest::join('users', 'users.id', 'allocated_tests.user_id')->join('tests', 'tests.id', 'allocated_tests.test_id')->select('allocated_tests.*', 'users.name', 'users.email', 'tests.test_type')->get();
+//        foreach ($data as $allocated) {
+//            $userReadingTest = UserTest::where('user_id', $allocated->user_id)->where('test_id', $allocated->test->reading_test->id)->where('allocated_test_id', $allocated->id)->get();
+//            if (!empty($userReadingTest)) {
+//                \Log::info($userReadingTest);
+//                foreach ($userReadingTest as $readingTest) {
+//                    $allocated->test->reading_test->status = $readingTest->status;
+//                }
+//                // $allocated->test->reading_test->status = $userReadingTest->status;
+//            } else {
+//                $allocated->test->reading_test->status = 0;
+//            }
+//
+//            $userListeningTest = UserTest::where('user_id', $allocated->user_id)->where('test_id', $allocated->test->listening_test->id)->where('allocated_test_id', $allocated->id)->get();
+//            if (!empty($userListeningTest)) {
+//                foreach ($userListeningTest as $listeningTest) {
+//                    $allocated->test->listening_test->status = $listeningTest->status;
+//                }
+//                // $allocated->test->listening_test->status = $userListeningTest->status;
+//            } else {
+//                $allocated->test->listening_test->status = 0;
+//            }
+//
+//            $userWritingTest = UserTest::where('user_id', $allocated->user_id)->where('test_id', $allocated->test->writing_test->id)->where('allocated_test_id', $allocated->id)->get();
+//            if (!empty($userWritingTest)) {
+//                foreach ($userWritingTest as $writingTest) {
+//                    $allocated->test->writing_test->status = $writingTest->status;
+//                }
+//                // $allocated->test->writing_test->status = $userWritingTest->status;
+//            } else {
+//                $allocated->test->writing_test->status = 0;
+//            }
+//        }
+        return view('dashboard.allocatedTests', compact('data'));
     }
 
     public function reviewWritingTest(Request $request, $id)
     {
         // dd($id);
-        $user_test = UserTest::where('test_id',$id)->where('user_id', $request->user_id)->first();
+        $user_test = UserTest::where('test_id', $id)->where('user_id', $request->user_id)->first();
         $user = User::find($user_test->user_id);
         $test = Test::with('test_groups')->find($user_test->test_id);
         $submitted_test = SubmittedTest::where('test_id', $user_test->test_id)->where('user_id', $user_test->user_id)->get();
-        foreach($test->test_groups as $group) {
+        foreach ($test->test_groups as $group) {
             foreach ($submitted_test as $submitted) {
                 if ($group->id == $submitted->question_number) {
                     $group->submitted_answer = $submitted->question_value;
                     $group->is_checked = $submitted->is_checked;
                     $group->submitted_id = $submitted->id;
+                    $group->submitted_marks = $submitted->marks;
                 }
             }
         }
@@ -150,8 +191,9 @@ class DashboardController extends Controller
         return view('dashboard.reviewWritingTest', compact('user_test', 'user', 'test'));
     }
 
-    public function submittedTests(Request $request){
-        $data = UserTest::join('tests', 'tests.id', 'user_tests.test_id')->join('users', 'users.id', 'user_tests.user_id')->when($request->type, function($d) use ($request){
+    public function submittedTests(Request $request)
+    {
+        $data = UserTest::join('tests', 'tests.id', 'user_tests.test_id')->join('users', 'users.id', 'user_tests.user_id')->when($request->type, function ($d) use ($request) {
             $d->where('tests.test_type', $request->type);
         })->where('user_tests.status', $request->status || 0)->get();
         return view('dashboard.submittedTests', compact('data'));
@@ -165,8 +207,8 @@ class DashboardController extends Controller
     public function allStudents(Request $request)
     {
         $tests = CombineTest::where('status', 1)->get();
-        $data = User::where('is_admin', '!=', 1)->when($request->status, function($d) use($request) {
-            if($request->status == 'active') {
+        $data = User::where('is_admin', '!=', 1)->when($request->status, function ($d) use ($request) {
+            if ($request->status == 'active') {
                 $d->where('is_active', 1);
             } else {
                 $d->where('is_active', 0);

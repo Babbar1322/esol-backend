@@ -17,11 +17,12 @@ class CreateUserTestsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('test_id');
+            $table->unsignedBigInteger('allocated_test_id');
             $table->string('start_time');
             $table->integer('total_questions');
             $table->string('total_score')->nullable();
             $table->string('status')->default('pending');
-            $table->string('submit_time');
+            $table->string('submit_time')->nullable();
             $table->string('time_taken')->nullable();
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

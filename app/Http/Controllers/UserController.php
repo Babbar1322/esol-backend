@@ -7,33 +7,37 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Log;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        try {
+            $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt($credentials)) {
-            if ($request->user()->is_admin != 1) {
-                $token = $request->user()->createToken('authToken')->plainTextToken;
-                return response()->json(['token' => $token, 'user' => $request->user()], 200);
-            } else {
-                Auth::logout(); // logout if the user is an admin
-                return response()->json(['error' => 'You don\'t have permission to access this website.'], 401);
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json(['error' => 'Email or Password is Incorrect.'], 401);
             }
-            // $token = $request->user()->createToken('authToken')->plainTextToken;
-            // return response()->json(['token' => $token, 'user' => $request->user()], 200);
+            // get user data and pass it with token
+            $user = Auth::user();
+            return response()->json(compact('token', 'user'), 200);
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Could not create token.'], 500);
         }
-
-        return response()->json(['error' => 'Email or Password is Incorrect.'], 401);
     }
 
     public function logout(Request $request)
     {
-        // $user = $request->user();
-        // $user->tokens()->delete();
-        return response()->json('User logged out successfully', 200);
+        try {
+            JWTAuth::invalidate(JWTAuth::parseToken());
+            return response()->json(['message' => 'Successfully logged out'], 200);
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Failed to logout'], 500);
+        }
+        // return response()->json('User logged out successfully', 200);
     }
 
     public function addNewStudent(Request $request)
@@ -62,11 +66,12 @@ class UserController extends Controller
         }
     }
 
-    public function changeStudentStatus(Request $request){
+    public function changeStudentStatus(Request $request)
+    {
         $user = User::find($request->user_id);
         $user->is_active = $request->status;
         $user->save();
-        if($request->status == 1){
+        if ($request->status == 1) {
             $message = "Student $user->name Activated Successfully";
         } else {
             $message = "Student $user->name Deactivated Successfully";
@@ -74,9 +79,15 @@ class UserController extends Controller
         return redirect()->back()->with('message', $message);
     }
 
-    public function deleteStudent(Request $request){
+    public function deleteStudent(Request $request)
+    {
         $user = User::find($request->user_id);
         $user->delete();
         return redirect()->back()->with('message', "Student $user->name Deleted Successfully");
+    }
+
+    public function getUserDetails(Request $request)
+    {
+        return response()->json($request->user(), 200);
     }
 }

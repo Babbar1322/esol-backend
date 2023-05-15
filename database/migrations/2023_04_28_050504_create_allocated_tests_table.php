@@ -17,6 +17,15 @@ class CreateAllocatedTestsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('combined_test_id')->nullable();
+            $table->unsignedBigInteger('reading_test_id')->nullable();
+            $table->integer('reading_test_status')->default(0);
+            $table->integer('reading_test_score')->default(0);
+            $table->unsignedBigInteger('writing_test_id')->nullable();
+            $table->integer('writing_test_status')->default(0);
+            $table->integer('writing_test_score')->default(0);
+            $table->unsignedBigInteger('listening_test_id')->nullable();
+            $table->integer('listening_test_status')->default(0);
+            $table->integer('listening_test_score')->default(0);
             $table->integer('status')->default(0);
             $table->timestamps();
         });

@@ -18,14 +18,16 @@
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form action="" method="post">
+                <form action="{{route('allocate-test')}}" method="post">
+                    @csrf
+                    <input type="hidden" value="" id="user_id" name="user_id">
                     <div class="mb-3">
                         <label for="test" class="form-label">Select Test</label>
-                        <select class="form-select" id="test">
+                        <select class="form-select" name="test_id" id="test">
                             @if(count($tests) > 0)
                                 <option selected disabled>Select Test</option>
                                 @foreach($tests as $test)
-                                    <option value="{{$test->id}}">{{$test->test_name}}</option>
+                                    <option value="{{$test->id}}">{{$test->name}}</option>
                                 @endforeach
                             @else
                                 <option disabled selected>No Tests Found</option>
@@ -33,7 +35,7 @@
                         </select>
                     </div>
                     <div class="d-grid">
-                        <button class="btn btn-primary">Allocate</button>
+                        <button type="submit" class="btn btn-primary">Allocate</button>
                     </div>
                 </form>
             </div>
@@ -62,6 +64,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         @endif
+        @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{$errors->first()}}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -82,7 +90,7 @@
                     <td>{{$student->email}}</td>
                     <td>{{$student->phone}}</td>
                     <td>
-                        <button class="btn btn-success allocate rounded-pill" data-test-id="{{$student->id}}" data-bs-toggle="modal" data-bs-target="#allocateTest">Allocate Test</button>
+                        <button class="btn btn-success allocate rounded-pill" data-user-id="{{$student->id}}" data-bs-toggle="modal" data-bs-target="#allocateTest">Allocate Test</button>
                         <button class="btn btn-danger rounded-pill delete-btn" data-user-id="{{$student->id}}" data-bs-toggle="modal" data-bs-target="#confirmation"><i class="ri-delete-bin-6-fill"></i></button>
                         @if($student->is_active == 1)
                             <a href="{{route('change-student-status', ['user_id' => $student->id,'status' => 0])}}" class="btn btn-secondary rounded-pill"><i class="ri-close-circle-line"></i></a>
@@ -108,18 +116,8 @@
     <script>
         $(document).ready(function(){
             $('.allocate').click(function(){
-                var id = $(this).data('test-id');
-                $.ajax({
-                    url: "",
-                    type: "POST",
-                    data: {
-                        "_token": "{{ csrf_token() }}",
-                        "id": id
-                    },
-                    success: function(response){
-                        console.log(response);
-                    }
-                });
+                var id = $(this).data('user-id');
+                $('#user_id').val(id);
             });
             $('.delete-btn').click(function(){
                 var id = $(this).data('user-id');

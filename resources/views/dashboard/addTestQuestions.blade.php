@@ -18,7 +18,7 @@
             <div class="card-body py-3 text-center">
                 <img src="https://cdn-icons-png.flaticon.com/512/1380/1380641.png
                 " draggable="false"
-                    style="max-width: 15%">
+                     style="max-width: 15%">
                 <h3 class="card-title">No Groups Found in This Test</h3>
             </div>
         </div>
@@ -35,7 +35,7 @@
                 <div class="mb-3">
                     <label for="question_number" class="form-label">Question Number</label>
                     <input type="text" name="question_number" class="form-control" id="question_number"
-                        placeholder="Question Number">
+                           placeholder="Question Number">
                 </div>
                 <div class="mb-3">
                     <label for="question" class="form-label">Question</label>
@@ -47,6 +47,7 @@
                         <option value="">Choose Question Type</option>
                         <option value="input">Input</option>
                         <option value="multi_choice">Mutli Choice</option>
+                        <option value="multi_question">Mutli Question</option>
                         <option value="single_choice">Single Choice</option>
                     </select>
                 </div>
@@ -56,15 +57,21 @@
                     <div class="mb-3" id="answerElement">
                         <label for="answer" class="form-label">Answer</label>
                         <input type="text" name="answers[]" class="form-control" id="answer"
-                            placeholder="Enter Answer">
+                               placeholder="Enter Answer">
                     </div>
+                </div>
+                <div class="mb-3">
+                    <label for="marks" class="form-label">Marks</label>
+                    <input type="number" name="marks" class="form-control" id="marks"
+                           placeholder="Enter Marks For This Question"/>
                 </div>
                 <div class="row">
                     <div class="col">
-                    <button class="btn btn-success w-25 mt-3 add-btn" onclick="submitData()">Add Question</button>
+                        <button class="btn btn-success w-25 mt-3 add-btn" onclick="submitData()">Add Question</button>
                     </div>
                     <div class="col">
-                    <a class="btn btn-primary w-25 mt-3 add-btn" href="{{route('admin.add-image-questions', ['id' => $data->id])}}">Add Image Question</a>
+                        <a class="btn btn-primary w-25 mt-3 add-btn"
+                           href="{{route('admin.add-image-questions', ['id' => $data->id])}}">Add Image Question</a>
                     </div>
                 </div>
             </div>
@@ -87,10 +94,13 @@
                 return $(elem).val();
             }).get();
 
+            let questionCount = $('#questionCount').val();
+
             let answerInputs = $('[name="answers[]"]');
-            let answer = answerInputs.map(function() {
+            let answer = answerInputs.map(function () {
                 return this.value;
             }).get();
+            let marks = $('#marks').val();
 
             let color = 'success';
             let message = "Question Added Successfully";
@@ -103,7 +113,9 @@
                 questionHint,
                 answer,
                 groupId,
-                test_id: '{{ $data->id }}'
+                questionCount,
+                test_id: '{{ $data->id }}',
+                marks
             }).then(res => {
                 // Showing Success Message at The Top of Form
                 let alert =
@@ -117,9 +129,11 @@
                 $('#questionType').val("");
                 $('[name="answers[]"]').val("");
                 $('[name="question_hint[]"]').val("");
+                $('#questionCount').val("");
                 $('.newInputs').remove();
                 $('#newinput').empty();
                 $('#addAnswer').remove();
+                $('#marks').val("");
             }).catch(err => {
                 // Showing Error Message at The Top of Form
                 color = 'danger';
@@ -137,41 +151,45 @@
         // Adding and Removing Input Fields Dynamically
         $(document).ready(() => {
             // When Question Type Changes It will remove Inputs that are created Dynamically
-            $('#questionType').change(function(e) {
+            $('#questionType').change(function (e) {
                 $('.newInputs').remove();
                 if (e.target.value === 'input') {
                     $('#newinput').empty();
+                } else if (e.target.value === 'multi_question') {
+                    $('#newinput').empty();
+                    $('#newinput').append(`<div class="mb-3"><label for="questionCount" class="form-label">Question Count</label><input type="number" class="form-control" name="count" id="questionCount" placeholder="Enter How many question you want"></div><div class="mb-3"><label for="questionHint" class="form-label">Question Options</label><input type="text" class="form-control" name="question_hint[]" id="questionHint" placeholder="Enter Question Option"></div><button class="btn btn-success" id="addBtn">Add More Options</button>`);
                 } else {
+                    $('#newinput').empty();
                     $('#newinput').append(
-                        `<div class="mb-3"><label for="questionHint" class="form-label">Question Hints</label><input type="text" class="form-control" name="question_hint[]" id="questionHint" placeholder="Enter Question Hint"></div><button class="btn btn-success" id="addBtn">Add More Hints</button>`
+                        `<div class="mb-3"><label for="questionHint" class="form-label">Question Options</label><input type="text" class="form-control" name="question_hint[]" id="questionHint" placeholder="Enter Question Option"></div><button class="btn btn-success" id="addBtn">Add More Options</button>`
                     );
                 }
-                if (e.target.value === 'multi_choice') {
+                if (e.target.value === 'multi_choice' || e.target.value === 'multi_question') {
                     $('#answer').append(
                         `<button class="btn btn-success" id="addAnswer">Add More Answers</button>`)
                 } else {
                     $('#addAnswer').remove();
                 }
             });
-            $('#newinput').on('click', '#addBtn', function() {
+            $('#newinput').on('click', '#addBtn', function () {
                 let newInput =
-                    `<div class="row align-items-center mb-3 newInputs"><div class="col-11"><input type="text" class="form-control" name="question_hint[]" id="questionHint" placeholder="Enter Question Hint"></div><div class="col-1"><button class="btn btn-danger rounded-pill remove-btn"><i class="ri-delete-bin-6-line"></i></button></div></div>`;
+                    `<div class="row align-items-center mb-3 newInputs"><div class="col-11"><input type="text" class="form-control" name="question_hint[]" id="questionHint" placeholder="Enter Question Option"></div><div class="col-1"><button class="btn btn-danger rounded-pill remove-btn"><i class="ri-delete-bin-6-line"></i></button></div></div>`;
                 $(newInput).hide().insertBefore(this).slideDown(200);
             });
 
-            $('#answer').on('click', '#addAnswer', function() {
+            $('#answer').on('click', '#addAnswer', function () {
                 let newInput =
                     `<div class="row align-items-center mb-3 newInputs"><div class="col-11"><input type="text" class="form-control" name="answers[]" id="answers" placeholder="Enter Answer"></div><div class="col-1"><button class="btn btn-danger rounded-pill remove-btn"><i class="ri-delete-bin-6-line"></i></button></div></div>`
                 $(newInput).hide().insertBefore(this).slideDown(200)
             })
             // This is Delete Button
-            $('#newinput').on('click', '.remove-btn', function() {
-                $(this).parents('.row').slideUp(200, function() {
+            $('#newinput').on('click', '.remove-btn', function () {
+                $(this).parents('.row').slideUp(200, function () {
                     $(this).remove();
                 });
             });
-            $('#answer').on('click', '.remove-btn', function() {
-                $(this).parents('.row').slideUp(200, function() {
+            $('#answer').on('click', '.remove-btn', function () {
+                $(this).parents('.row').slideUp(200, function () {
                     $(this).remove();
                 });
             });

@@ -4,7 +4,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
-                    Are You Sure?<br /><b>You Want to Delete This Test?</b>
+                    Are You Sure?<br/><b>You Want to Delete This Test?</b>
                 </div>
                 <div class="modal-footer py-1">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -23,7 +23,8 @@
         </div>
         <div>
             <a href="{{route('admin.add-new-test')}}" class="btn btn-primary rounded-pill shadow px-4">Add New Test</a>
-            <a href="{{route('admin.combine-tests')}}" class="btn btn-success rounded-pill shadow px-4 ms-3">Combine Tests</a>
+            <a href="{{route('admin.combine-tests')}}" class="btn btn-success rounded-pill shadow px-4 ms-3">Combine
+                Tests</a>
         </div>
     </div>
 
@@ -33,6 +34,17 @@
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('message') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li><strong>{{ $error }}</strong></li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                            aria-label="Close"></button>
                 </div>
             @endif
             <table class="table table-striped table-hover">
@@ -53,18 +65,20 @@
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $test->name }}</td>
-                            <td style="text-transform: capitalize;">{{ $test->test_type }}</td>
-                            <td>{{ count($test->test_groups) }}</td>
-                            <td>{{ $test->total_questions }}</td>
+                            <td>{{ $test->reading_test->test_name }}</td>
+                            <td>{{ $test->listening_test->test_name }}</td>
+                            <td>{{ $test->writing_test->test_name }}</td>
                             <td>{{ $test->created_at }}</td>
                             <td>
                                 @if ($test->status === 0)
-                                    <a href="{{ route('publish-test', ['id' => $test->id]) }}"
+                                    <a href="{{ route('change-combined-test-status', ['id' => $test->id, 'status' => 1]) }}"
                                        class="btn btn-primary rounded-pill">Publish</a>
                                 @else
-                                    <button class="btn btn-secondary rounded-pill">Hide</button>
+                                    <a href="{{ route('change-combined-test-status', ['id' => $test->id, 'status' => 0]) }}"
+                                       class="btn btn-secondary rounded-pill">Hide</a>
                                 @endif
-                                <button type="button" class="btn btn-danger deleteTest rounded-pill" test-id="{{ $test->id }}"
+                                <button type="button" class="btn btn-danger deleteTest rounded-pill"
+                                        test-id="{{ $test->id }}"
                                         data-bs-toggle="modal" data-bs-target="#confirmation">
                                     <i class="ri-delete-bin-6-fill"></i>
                                 </button>
@@ -77,7 +91,9 @@
                         <td colspan="7" class="text-center"><h3>No Combined Tests Found</h3></td>
                     </tr>
                     <tr>
-                        <td colspan="7" class="text-center"><a href="{{route('admin.add-new-test')}}" class="btn btn-primary px-3 rounded-pill shadow">Combine New Test</a></td>
+                        <td colspan="7" class="text-center"><a href="{{route('admin.add-new-test')}}"
+                                                               class="btn btn-primary px-3 rounded-pill shadow">Combine
+                                New Test</a></td>
                     </tr>
                 @endif
                 </tbody>
@@ -86,9 +102,9 @@
     </div>
     <script src="{{ asset('dashboard/lib/jquery/jquery.min.js') }}"></script>
     <script>
-        $(document).ready(function() {
-            $('.deleteTest').click(function() {
-                $('#deleteBtn').attr('href', '{{ route('delete-test') }}' + "?id=" + $(this).attr(
+        $(document).ready(function () {
+            $('.deleteTest').click(function () {
+                $('#deleteBtn').attr('href', '{{ route('delete-combined-test') }}' + "?id=" + $(this).attr(
                     'test-id'));
             })
         })
