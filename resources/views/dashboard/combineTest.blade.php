@@ -12,10 +12,20 @@
 </div>
 <div class="card card-one mt-3 shadow">
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+    @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <ul class="mb-0">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        </ul>
+    </div>
     @endif
     <div class="card-body p-3">
         <form action="{{route('combine-tests')}}" method="post">
@@ -30,12 +40,12 @@
                 <select name="reading_test_id" class="form-select" id="read">
                     <option value="" disabled selected>Select a Reading Test</option>
                     @foreach($readingTest as $test)
-                        <option value="{{$test->id}}">{{$test->test_name}}</option>
+                    <option value="{{$test->id}}">{{$test->test_name}}</option>
                     @endforeach
-{{--                    <option value="0"></option>--}}
+                    {{-- <option value="0"></option>--}}
                 </select>
                 @else
-                    <h4>No Reading Test Found</h4>
+                <h4>No Reading Test Found</h4>
                 @endif
             </div>
             <div class="mb-3">
@@ -44,12 +54,12 @@
                 <select name="listening_test_id" class="form-select" id="listen">
                     <option value="" disabled selected>Select a Listening Test</option>
                     @foreach($listeningTest as $test)
-                        <option value="{{$test->id}}">{{$test->test_name}}</option>
+                    <option value="{{$test->id}}">{{$test->test_name}}</option>
                     @endforeach
-{{--                    <option value="0"></option>--}}
+                    {{-- <option value="0"></option>--}}
                 </select>
                 @else
-                    <h4>No Listening Test Found</h4>
+                <h4>No Listening Test Found</h4>
                 @endif
             </div>
             <div class="mb-3">
@@ -58,11 +68,11 @@
                 <select name="writing_test_id" class="form-select" id="write">
                     <option value="" disabled selected>Select a Writing Test</option>
                     @foreach($writingTest as $test)
-                        <option value="{{$test->id}}">{{$test->test_name}}</option>
+                    <option value="{{$test->id}}">{{$test->test_name}}</option>
                     @endforeach
                 </select>
                 @else
-                    <h4>No Writing Test Found</h4>
+                <h4>No Writing Test Found</h4>
                 @endif
             </div>
             <div class="d-grid">

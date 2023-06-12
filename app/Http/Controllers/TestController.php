@@ -176,6 +176,15 @@ class TestController extends Controller
             }
             //            }
 
+            $answer = null;
+            if ($request->question_type === 'multi_choice' || $request->question_type === 'multi_question') {
+                $answer = json_encode($request->answer);
+            } elseif ($request->question_type === 'input') {
+                $answer = explode(',', $request->answer[0]);
+            } else {
+                $answer = $request->answer[0];
+            }
+
             // If There's not any errors, Test will be inserted Successfully
             TestQuestion::create([
                 "test_id" => $request->test_id,
@@ -184,7 +193,7 @@ class TestController extends Controller
                 "question_type" => $request->question_type,
                 "question" => $request->question,
                 "question_hint" => json_encode($request->questionHint),
-                "answer" => $request->question_type === 'multi_choice' || $request->question_type === 'multi_question' ? json_encode($request->answer) : $request->answer[0],
+                "answer" => json_encode($answer),
                 "marks" => $request->marks,
                 "q_count" => $request->questionCount,
             ]);
@@ -223,10 +232,6 @@ class TestController extends Controller
                 'marks' => 'required',
             ]);
 
-            //            \Log::info($request->all());
-
-            // return response()->json('Hellop');
-
             // Check If Question Number Already Exist
             $checkQuestion = TestQuestion::where('question_number', $request->question_number)->where('test_id', $request->test_id)->first();
             if (!empty($checkQuestion)) {
@@ -245,7 +250,6 @@ class TestController extends Controller
             shuffle($answers);
 
             // Insert TestQuestions with loop
-            //            Log::info($request->all());
             collect($request->sub_questions)->map(function ($value, $index) use ($request, $dnd, $answers) {
                 TestQuestion::create([
                     "test_id" => $request->test_id,
@@ -290,8 +294,6 @@ class TestController extends Controller
                 'question' => 'required|string',
             ]);
 
-            //            Log::info($request->all());
-
             // Check If Question Number Already Exist
             //            $checkQuestion = TestQuestion::where('question_number', $request->question_number)->where('test_id', $request->test_id)->first();
             //            if (!empty($checkQuestion)) {
@@ -299,7 +301,6 @@ class TestController extends Controller
             //                return response()->json(['error' => 'Question Number Already Exist'], 400);
             //            }
             //            $question_image = "";
-            // \Log::info($request->all());
             // die;
             if ($request->hasFile('question_image')) {
                 $file = $request->file('question_image');
@@ -344,21 +345,31 @@ class TestController extends Controller
 
     public function combineTests(Request $request)
     {
-        $combineTest = new CombineTest;
-        $combineTest->create([
-            'name' => $request->name,
-            'reading_test_id' => $request->reading_test_id,
-            'listening_test_id' => $request->listening_test_id,
-            'writing_test_id' => $request->writing_test_id,
-        ]);
-        // update test Is Combined
-        $readingTest = Test::where('id', $request->reading_test_id)->first();
-        $readingTest->update(['is_combined' => 1]);
-        $listeningTest = Test::where('id', $request->listening_test_id)->first();
-        $listeningTest->update(['is_combined' => 1]);
-        $writingTest = Test::where('id', $request->writing_test_id)->first();
-        $writingTest->update(['is_combined' => 1]);
-        return redirect()->back()->with('success', 'Test Combined Successfully');
+        try {
+            $request->validate([
+                'name' => 'required|string',
+                'reading_test_id' => 'required|integer',
+                'listening_test_id' => 'required|integer',
+                'writing_test_id' => 'required|integer',
+            ]);
+            $combineTest = new CombineTest;
+            $combineTest->create([
+                'name' => $request->name,
+                'reading_test_id' => $request->reading_test_id,
+                'listening_test_id' => $request->listening_test_id,
+                'writing_test_id' => $request->writing_test_id,
+            ]);
+            // update test Is Combined
+            $readingTest = Test::where('id', $request->reading_test_id)->first();
+            $readingTest->update(['is_combined' => 1]);
+            $listeningTest = Test::where('id', $request->listening_test_id)->first();
+            $listeningTest->update(['is_combined' => 1]);
+            $writingTest = Test::where('id', $request->writing_test_id)->first();
+            $writingTest->update(['is_combined' => 1]);
+            return redirect()->back()->with('success', 'Test Combined Successfully');
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors(['error' => $e->errors()[array_keys($e->errors())[0]]]);
+        }
     }
 
     public function getAllTest(Request $request)
@@ -376,17 +387,28 @@ class TestController extends Controller
     public function getCombinedTest(Request $request, $id)
     {
         $user_id = Auth::user()->id;
-        $allocatedTest = AllocatedTest::where('user_id', $user_id)->where('id', $id)->where(function ($q) use ($request, $id) {
+        $allocatedTest = AllocatedTest::where('user_id', $user_id)->where('id', $id)->where(function ($q) {
             $q->where('status', '!=', 3)->orWhere('status', '!=', 2);
         })->first();
+        if (empty($allocatedTest)) {
+            return response()->json('Test Not Found!', 400);
+        }
 
         $data = CombineTest::with('reading_test', 'writing_test', 'listening_test')->where('id', $allocatedTest->combined_test_id)->first();
-        $data->reading_test->is_taken = UserTest::where('test_id', $data->reading_test->id)->where('user_id', $user_id)->where('status', '!=', 3)->where('allocated_test_id', $allocatedTest->id)->first();
-        $data->listening_test->is_taken = UserTest::where('test_id', $data->listening_test->id)->where('user_id', $user_id)->where('status', '!=', 3)->where('allocated_test_id', $allocatedTest->id)->first();
-        $data->writing_test->is_taken = UserTest::where('test_id', $data->writing_test->id)->where('user_id', $user_id)->where('status', '!=', 3)->where('allocated_test_id', $allocatedTest->id)->first();
-        $data->reading_test->total_questions = TestQuestion::where('test_id', $data->reading_test->id)->count();
-        $data->listening_test->total_questions = TestQuestion::where('test_id', $data->listening_test->id)->count();
-        $data->writing_test->total_questions = TestQuestion::where('test_id', $data->writing_test->id)->count();
+        if (!empty($data->reading_test)) {
+            $data->reading_test->is_taken = UserTest::where('test_id', $data->reading_test->id)->where('user_id', $user_id)->where('status', '!=', 3)->where('allocated_test_id', $allocatedTest->id)->first();
+            $data->reading_test->total_questions = TestQuestion::where('test_id', $data->reading_test->id)->count();
+        }
+        if (!empty($data->listening_test)) {
+            $data->listening_test->is_taken = UserTest::where('test_id', $data->listening_test->id)->where('user_id', $user_id)->where('status', '!=', 3)->where('allocated_test_id', $allocatedTest->id)->first();
+
+            $data->listening_test->total_questions = TestQuestion::where('test_id', $data->listening_test->id)->count();
+        }
+        if (!empty($data->writing_test)) {
+            $data->writing_test->is_taken = UserTest::where('test_id', $data->writing_test->id)->where('user_id', $user_id)->where('status', '!=', 3)->where('allocated_test_id', $allocatedTest->id)->first();
+
+            $data->writing_test->total_questions = TestQuestion::where('test_id', $data->writing_test->id)->count();
+        }
         return response()->json($data, 200);
     }
 
@@ -454,13 +476,11 @@ class TestController extends Controller
         //                    $question->question = $imageQuestion->question;
         //                    // $question->question_image = $imageQuestion->media->path;
         //                    $question->image_url = "http://localhost:8000/" . $media->path;
-        ////                    Log::info($question->image_url);
         //                }
         //            }
         //        }
         foreach ($test->test_groups as $group) {
             $imageQuestions = [];
-            //            Log::info($request->all());
             // loop through the test questions and add question to an array where question type is image
             foreach ($group->test_questions as $question) {
                 if ($question->question_type == 'image') {
@@ -490,7 +510,6 @@ class TestController extends Controller
                     // $question->question_image = $imageQuestion->media->path;
                     $question->image_url = "https://raazbook.com/esol-new/" . $media->path;
                     $question->imageQuestions = json_encode($imageQuestions);
-                    // Log::info($question->image_url);
                 }
             }
         }
@@ -505,9 +524,6 @@ class TestController extends Controller
             return response()->json('This Test is already Submitted before', 401);
         }
 
-        // log the request
-        //        Log::info($request->all());
-
         // Stored the Time when User Submit the Test
         $submit_time = round(microtime(true) * 1000);
 
@@ -515,8 +531,6 @@ class TestController extends Controller
         foreach ($request->questionValues as $q_number => $question) {
             // Find Question to match the answer
             $testQuestion = TestQuestion::find($question['question_id']);
-            // Log::info($testQuestion);
-            // Log::info($testQuestion['answer']);
 
             // If Question Type is multi_choice then this will match the answer values from array
             $correct_count = 0;
@@ -525,7 +539,7 @@ class TestController extends Controller
                 $is_correct = 1;
 
                 // Convert json to array that retrieved from database
-                $answer = json_decode($testQuestion->answer);
+                $answer = json_decode(json_decode($testQuestion->answer));
 
                 // This value of the answer by user
                 $user_input = $question['value'];
@@ -564,7 +578,7 @@ class TestController extends Controller
                 $is_correct = 1;
 
                 // Convert json to array that retrieved from database
-                $answer = json_decode($testQuestion->answer);
+                $answer = json_decode(json_decode($testQuestion->answer));
 
                 // This value of the answer by user
                 $user_input = $question['value'];
@@ -575,8 +589,6 @@ class TestController extends Controller
                 }));
 
                 // Matching the answer with the original answer
-                // Log::info($answer);
-                // Log::info($filter_answers);
                 $matchAnswers = array_intersect($answer, $filter_answers);
 
                 // Checking if original answer's length is equal to matched answer values
@@ -602,6 +614,27 @@ class TestController extends Controller
                     'allocated_test_id' => $request->allocated_test_id,
                     'marks' => count($matchAnswers),
                 ]);
+            } else if ($question['question_type'] === 'input') {
+                $is_correct = 0;
+                foreach (json_decode($testQuestion->answer) as $key => $value) {
+                    if ($value === $question['value']) {
+                        $is_correct = 1;
+                    }
+                }
+                if ($is_correct === 1) {
+                    $correct_count++;
+                }
+                SubmittedTest::create([
+                    'test_id' => $testQuestion->test_id,
+                    'user_id' => Auth::user()->id,
+                    'question_id' => $question['question_id'],
+                    'question_number' => $q_number,
+                    'question_type' => $question['question_type'],
+                    'question_value' => $question['value'],
+                    'is_correct' => $is_correct,
+                    'allocated_test_id' => $request->allocated_test_id,
+                    'marks' => $is_correct ? $testQuestion->marks : 0,
+                ]);
             } else {
                 // If Question Type is not multi_choice then this will match the answer value with original answer
                 $is_correct = $testQuestion->answer == $question['value'];
@@ -621,8 +654,6 @@ class TestController extends Controller
                 ]);
             }
         }
-
-        Log::info($request->allocated_test_id);
 
         $allocatedTest = AllocatedTest::findOrFail($request->allocated_test_id);
         if ($request->type === 'listening') {
@@ -649,7 +680,6 @@ class TestController extends Controller
     {
         // Check if user already submitted the test
         $userTest = UserTest::where('user_id', Auth::user()->id)->where('test_id', $request->test_id)->where('status', '!=', 3)->where('allocated_test_id', $request->allocated_test_id)->first();
-        //        \Log::info($request);
         if (!empty($userTest->submit_time)) {
             return response()->json('This Test is already Submitted before', 401);
         }
@@ -691,7 +721,6 @@ class TestController extends Controller
     public function validateWritingTest(Request $request)
     {
         $submittedTest = SubmittedTest::where('id', $request->id)->first();
-        // Log::info($request->all());
         $submittedTest->update([
             'is_correct' => 1,
             'is_checked' => 1,
@@ -713,7 +742,6 @@ class TestController extends Controller
     public function invalidateWritingTest(Request $request)
     {
         $submittedTest = SubmittedTest::where('id', $request->id)->first();
-        // Log::info($request->all());
         $submittedTest->update([
             'is_correct' => 0,
             'is_checked' => 1,
@@ -735,12 +763,10 @@ class TestController extends Controller
     {
         $user_id = Auth::user()->id;
         $test = UserTest::where('test_id', $request->test_id)->where('user_id', $user_id)->where('status', '!=', 3)->where('allocated_test_id', $request->allocated_test_id)->first();
-        //        Log::info($request);
         if ($test->submit_time == null) {
             return response()->json('Test not Submitted by user', 418);
         }
         $test = DB::select("SELECT * FROM `submitted_tests` INNER JOIN user_tests on user_tests.user_id = submitted_tests.user_id AND user_tests.test_id = submitted_tests.test_id AND user_tests.allocated_test_id = submitted_tests.allocated_test_id WHERE user_tests.user_id = $user_id AND user_tests.test_id = $request->test_id AND submitted_tests.allocated_test_id = $request->allocated_test_id;");
-        //        Log::info($test);
         $imageAnswers = [];
         $isCorrect = [];
         foreach ($test as $question) {
@@ -762,16 +788,15 @@ class TestController extends Controller
 
     public function allocateTest(Request $request)
     {
-        $allocatedTest = AllocatedTest::where('combined_test_id', $request->test_id)->where('user_id', Auth::user()->id)->first();
+        $allocatedTest = AllocatedTest::where('combined_test_id', $request->test_id)->where('user_id', $request->user_id)->first();
         if ($allocatedTest) {
             return redirect()->back()->withErrors('Test Already Allocated');
         }
         // $test = CombineTest::find($request->test_id);
         $combinedTest = CombineTest::with('reading_test', 'listening_test', 'writing_test')->where('id', $request->test_id)->first();
-        //        \Log::info($combinedTest);
         AllocatedTest::create([
             'combined_test_id' => $request->test_id,
-            'user_id' => Auth::user()->id,
+            'user_id' => $request->user_id,
             'reading_test_id' => $combinedTest->reading_test->id,
             'listening_test_id' => $combinedTest->listening_test->id,
             'writing_test_id' => $combinedTest->writing_test->id,

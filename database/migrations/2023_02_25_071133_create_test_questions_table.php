@@ -21,7 +21,7 @@ class CreateTestQuestionsTable extends Migration
             $table->string('question')->nullable();
             $table->integer('question_number');
             $table->string('question_hint', 1200)->nullable();
-            $table->string('answer');
+            $table->text('answer');
             $table->integer('q_count')->nullable();
             $table->unsignedBigInteger('dnd_id')->nullable();
             $table->integer('marks');
