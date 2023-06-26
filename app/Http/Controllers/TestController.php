@@ -22,7 +22,6 @@ class TestController extends Controller
 {
     public function addNewTest(Request $request)
     {
-        try {
             // Validate the data that user send
             $request->validate([
                 'test_name' => 'required|string',
@@ -64,14 +63,10 @@ class TestController extends Controller
             //            });
             //            return redirect("admin/add-test-questions/$test->id");
             return redirect("admin/add-test-groups/$test->id");
-        } catch (ValidationException $e) {
-            return redirect()->back()->withErrors(['error' => $e->errors()[array_keys($e->errors())[0]]]);
-        }
     }
 
     public function addTestGroup(Request $request)
     {
-        try {
             // Validate the data that user send
             $request->validate([
                 'test_id' => 'required|integer',
@@ -94,9 +89,6 @@ class TestController extends Controller
             ]);
             return redirect()->back()->with('message', 'Group Added Successfully');
             //            "admin/add-test-questions/$request->test_id"
-        } catch (ValidationException $e) {
-            return redirect()->back()->withErrors(['error' => $e->errors()[array_keys($e->errors())[0]]]);
-        }
     }
 
     public function changeTestStatus(Request $request)
@@ -144,7 +136,6 @@ class TestController extends Controller
 
     public function addTestQuestions(Request $request)
     {
-        try {
             // Checking The Validations for Incoming Data
             $request->validate([
                 'test_id' => 'required|integer',
@@ -180,7 +171,7 @@ class TestController extends Controller
             if ($request->question_type === 'multi_choice' || $request->question_type === 'multi_question') {
                 $answer = json_encode($request->answer);
             } elseif ($request->question_type === 'input') {
-                $answer = explode(',', $request->answer[0]);
+                $answer = json_encode(explode(',', $request->answer[0]));
             } else {
                 $answer = $request->answer[0];
             }
@@ -192,8 +183,8 @@ class TestController extends Controller
                 "question_number" => $request->question_number,
                 "question_type" => $request->question_type,
                 "question" => $request->question,
-                "question_hint" => json_encode($request->questionHint),
-                "answer" => json_encode($answer),
+                "question_hint" => count($request->questionHint) > 0 ? json_encode($request->questionHint) : null,
+                "answer" => $answer,
                 "marks" => $request->marks,
                 "q_count" => $request->questionCount,
             ]);
@@ -206,20 +197,10 @@ class TestController extends Controller
                 return response()->json("Question Number $request->question_number to $total added successfully", 200);
             }
             return response()->json("Question Number $request->question_number added successfully", 200);
-        } catch (ValidationException $e) {
-            if (!empty($e->errors()['groupId'])) {
-                return response()->json(['error' => "Select a Group"], 400);
-            }
-            if (!empty($e->errors()['question_type'])) {
-                return response()->json(['error' => "Select a Question Type"], 400);
-            }
-            return response()->json(['error' => $e->errors()[array_keys($e->errors())[0]]], 400);
-        }
     }
 
     public function addDNDQuestions(Request $request)
     {
-        try {
             // Checking The Validations for Incoming Data
             $request->validate([
                 'test_id' => 'required|integer',
@@ -272,20 +253,10 @@ class TestController extends Controller
             $total_q = $q_number + count($request->sub_questions) - 1;
 
             return response()->json("Questions from $q_number to $total_q added successfully", 200);
-        } catch (ValidationException $e) {
-            if (!empty($e->errors()['groupId'])) {
-                return response()->json(['error' => "Select a Group"], 400);
-            }
-            if (!empty($e->errors()['question_type'])) {
-                return response()->json(['error' => "Select a Question Type"], 400);
-            }
-            return response()->json(['error' => $e->errors()[array_keys($e->errors())[0]]], 400);
-        }
     }
 
     public function addImageQuestions(Request $request)
     {
-        try {
             // Checking The Validations for Incoming Data
             $request->validate([
                 'test_id' => 'required|integer',
@@ -332,20 +303,10 @@ class TestController extends Controller
             $total_q = $q_number + count(json_decode($request->image_coords)) - 1;
 
             return response()->json("Questions from $q_number to $total_q added successfully", 200);
-        } catch (ValidationException $e) {
-            if (!empty($e->errors()['groupId'])) {
-                return response()->json(['error' => "Select a Group"], 400);
-            }
-            if (!empty($e->errors()['question_type'])) {
-                return response()->json(['error' => "Select a Question Type"], 400);
-            }
-            return response()->json(['error' => $e->errors()[array_keys($e->errors())[0]]], 400);
-        }
     }
 
     public function combineTests(Request $request)
     {
-        try {
             $request->validate([
                 'name' => 'required|string',
                 'reading_test_id' => 'required|integer',
@@ -367,9 +328,6 @@ class TestController extends Controller
             $writingTest = Test::where('id', $request->writing_test_id)->first();
             $writingTest->update(['is_combined' => 1]);
             return redirect()->back()->with('success', 'Test Combined Successfully');
-        } catch (ValidationException $e) {
-            return redirect()->back()->withErrors(['error' => $e->errors()[array_keys($e->errors())[0]]]);
-        }
     }
 
     public function getAllTest(Request $request)
@@ -410,6 +368,49 @@ class TestController extends Controller
             $data->writing_test->total_questions = TestQuestion::where('test_id', $data->writing_test->id)->count();
         }
         return response()->json($data, 200);
+    }
+
+    public function previewTest($id)
+    {
+        // $test = Test::with('test_groups.test_questions')->find($id);
+        $test = Test::with(['test_groups.test_questions' => function ($query) {
+            $query->orderBy('question_number');
+        }])->find($id);
+        foreach ($test->test_groups as $group) {
+            $imageQuestions = [];
+            // loop through the test questions and add question to an array where question type is image
+            foreach ($group->test_questions as $question) {
+                if ($question->question_type == 'image') {
+                    // $imageQuestion = ImageQuestion::where('question_id', $question->id)->first();
+                    // $media = Media::where('id', $imageQuestion->media_id)->first();
+                    // $question->image_coordinates = $imageQuestion->image_coordinates;
+                    // $question->question = $imageQuestion->question;
+                    // // $question->question_image = $imageQuestion->media->path;
+                    // $question->image_url = "http://localhost:8000/" . $media->path;
+
+                    $imageQuestions[] = $question;
+                }
+            }
+            // loop through the test questions
+            foreach ($group->test_questions as $question) {
+                // check if the question type is drag and drop, if yes then get the answer as hint array
+                if ($question->question_type == 'drag_and_drop') {
+                    $dragQuestion = DragAndDrop::where('id', $question->dnd_id)->first();
+                    $question->drag = $dragQuestion;
+                    $question->hints = json_decode($question->answer);
+                }
+                if ($question->question_type == 'image') {
+                    $imageQuestion = ImageQuestion::where('question_id', $question->id)->first();
+                    $media = Media::where('id', $imageQuestion->media_id)->first();
+                    $question->image_coordinates = json_decode($imageQuestion->image_coordinates);
+                    $question->question = $imageQuestion->question;
+                    // $question->question_image = $imageQuestion->media->path;
+                    $question->image_url = $media->path;
+                    $question->imageQuestions = $imageQuestions;
+                }
+            }
+        }
+        return view('dashboard.previewTest', compact('test'));
     }
 
     public function takeTest(Request $request)
@@ -671,7 +672,7 @@ class TestController extends Controller
             ]);
         }
         $userTest->update([
-            'total_score' => $correct_count, 'status' => 2, 'submit_time' => $submit_time, 'time_taken' => $submit_time - $userTest->start_time
+            'total_score' => $correct_count ?? 0, 'status' => 2, 'submit_time' => $submit_time, 'time_taken' => $submit_time - $userTest->start_time
         ]);
         return response()->json('success', 200);
     }

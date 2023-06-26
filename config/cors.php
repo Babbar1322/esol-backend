@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000', 'https://esol-by-gs.web.app'],
+    'allowed_origins' => ['http://localhost:3000', 'https://esol-by-gs.web.app', 'http://192.168.0.196:3000', 'http://192.168.0.188:3000'],
 
     'allowed_origins_patterns' => [],
 

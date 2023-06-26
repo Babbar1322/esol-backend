@@ -70,6 +70,7 @@
                                 @else
                                     <a href="{{ route('change-test-status', ['id' => $test->id, 'status' => 0]) }}" class="btn btn-secondary rounded-pill">Hide</a>
                                 @endif
+                                <a href="{{route('admin.preview-test', ['id' => $test->id])}}" class="btn btn-info rounded-pill">Edit</a>
                                 <button type="button" class="btn btn-danger deleteTest rounded-pill" test-id="{{ $test->id }}"
                                     data-bs-toggle="modal" data-bs-target="#confirmation">
                                     <i class="ri-delete-bin-6-fill"></i>

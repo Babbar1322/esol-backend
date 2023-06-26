@@ -40,6 +40,7 @@ Route::group(["middleware" => "auth"], function () {
         Route::get('add-dnd-questions/{id}', [DashboardController::class, 'addDNDQuestions'])->name('admin.add-dnd-questions');
         Route::get('add-image-questions/{id}', [DashboardController::class, 'addImageQuestions'])->name('admin.add-image-questions');
         Route::get('submitted-writing-tests', [DashboardController::class, 'submittedWritingTests'])->name('admin.submitted-writing-tests');
+        Route::get('preview-test/{id}', [TestController::class, 'previewTest'])->name('admin.preview-test');
         Route::get('review-writing-test/{id}', [DashboardController::class, 'reviewWritingTest'])->name('admin.review-writing-test');
 
         Route::get('combine-tests', [DashboardController::class, 'combineTests'])->name('admin.combine-tests');

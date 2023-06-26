@@ -23,7 +23,7 @@
             </div>
         </div>
     @else
-        <!-- <form action="{{ route('add-new-test') }}" method="POST"> -->
+        <!-- <form action="{{-- route('add-new-test') --}}" method="POST"> -->
         <select name="group_id" id="group_id" class="form-select">
             <option value="">Select Group to Add Question</option>
             @foreach ($data['test_groups'] as $group)
