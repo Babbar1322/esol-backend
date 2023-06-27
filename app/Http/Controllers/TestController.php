@@ -91,6 +91,18 @@ class TestController extends Controller
             //            "admin/add-test-questions/$request->test_id"
     }
 
+    public function deleteTestGroup($id)
+    {
+        $testGroup = TestGroup::find($id);
+        if(!empty($testGroup))
+        {
+            $testGroup->delete();
+            return redirect()->back()->with('message', "Test Group {$testGroup->group_name} deleted successfully");
+        }
+
+        return redirect()->back()->withErrors('errors', "Something went wrong");
+    }
+
     public function changeTestStatus(Request $request)
     {
         $test = Test::find($request->id);
@@ -303,6 +315,57 @@ class TestController extends Controller
             $total_q = $q_number + count(json_decode($request->image_coords)) - 1;
 
             return response()->json("Questions from $q_number to $total_q added successfully", 200);
+    }
+
+    public function deleteQuestion(Request $request, $id)
+    {
+        $question = TestQuestion::find($id);
+
+        if(!empty($question)){
+        if($question->question_type === 'input' || $question->question_type === 'single_choice' || $question->question_type === 'multi_choice')
+        {
+            $question->delete();
+            return redirect()->back()->with('message', "Question {$question->question_number} delete successfully");
+        }
+
+        if($question->question_type === 'multi_question')
+        {
+            $question->delete();
+            $question_last_number = $question->question_number + $question->q_count;
+            return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
+        }
+
+        if($question->question_type === 'image')
+        {
+            $imageQuestion = ImageQuestion::where('question_id', $question->id)->where('question_number', $question->question_number)->first();
+            $media = Media::find($imageQuestion->media_id);
+            if(\File::exists(public_path($media->path)))
+            {
+                \File::delete(public_path($media->path));
+            }
+            $media->delete();
+            for($i = 0; $i < $question->q_count; $i++)
+            {
+                TestQuestion::where('question_number', $question->question_number + $i)->where('test_group_id', $question->test_group_id)->where('test_id', $question->test_id)->delete();
+            }
+            $imageQuestion->delete();
+            $question_last_number = $question->question_number + $question->q_count;
+
+            return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
+        }
+
+        if($question->question_type === 'drag_and_drop')
+        {
+            DragAndDrop::find($question->dnd_id)->delete();
+            TestQuestion::where('dnd_id', $question->dnd_id)->delete();
+            $question_last_number = $question->question_number + $question->q_count;
+            return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
+        }
+        $totalQuestions = TestQuestion::where('test_group_id', $question->test_group_id)->count();
+        TestGroup::where('test_group_id', $question->test_group_id)->update(['total_questions' => $totalQuestions]);
+    }
+
+        return redirect()->back()->withErrors('error', 'Something went wrong');
     }
 
     public function combineTests(Request $request)
