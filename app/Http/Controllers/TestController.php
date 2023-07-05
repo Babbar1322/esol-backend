@@ -27,14 +27,9 @@ class TestController extends Controller
                 'test_name' => 'required|string',
                 'test_type' => 'required|string',
                 'test_time' => 'required|integer',
-                //                'group_name' => 'required',
-                //                'group_content' => 'required',
             ]);
 
-            // dd($request->file('test_audio'));
-
             if ($request->hasFile('test_audio')) {
-                // dd($request->file('test_audio'));
                 $audio = $request->file('test_audio');
                 $audio_name = time() . $audio->getClientOriginalName();
                 $audio->move(public_path('uploads/audio'), $audio_name);
@@ -54,14 +49,6 @@ class TestController extends Controller
             ]);
 
             // Inserting data to test_groups for each group from array
-            //            collect($request->group_name)->map(function ($group, $index) use ($test, $request) {
-            //                TestGroup::create([
-            //                    "test_id" => $test->id,
-            //                    "group_name" => $group,
-            //                    "group_content" => $request->group_content[$index]
-            //                ]);
-            //            });
-            //            return redirect("admin/add-test-questions/$test->id");
             return redirect("admin/add-test-groups/$test->id");
     }
 
@@ -71,24 +58,15 @@ class TestController extends Controller
             $request->validate([
                 'test_id' => 'required|integer',
                 'group_name' => 'required|string',
-                // 'group_content' => 'required|string',
             ]);
 
             // Insterting data to test_groups for each group from array
-            //            collect($request->group_name)->map(function ($group, $index) use ($request) {
-            //                TestGroup::create([
-            //                    "test_id" => $request->test_id,
-            //                    "group_name" => $group,
-            //                    "group_content" => $request->group_content[$index]
-            //                ]);
-            //            });
             TestGroup::create([
                 "test_id" => $request->test_id,
                 "group_name" => $request->group_name,
                 "group_content" => $request->group_content
             ]);
             return redirect()->back()->with('message', 'Group Added Successfully');
-            //            "admin/add-test-questions/$request->test_id"
     }
 
     public function deleteTestGroup($id)
@@ -154,8 +132,6 @@ class TestController extends Controller
                 'groupId' => 'required',
                 'question_number' => 'required|integer',
                 'question_type' => 'required|string',
-                // 'question' => 'required|string',
-                // 'questionHint' => 'required',
                 'answer' => 'required',
                 'marks' => 'required',
             ]);
@@ -166,7 +142,6 @@ class TestController extends Controller
                 // If Question Exist, Return an Error to User
                 return response()->json(['error' => 'Question Number Already Exist'], 401);
             }
-            //            if ($request->question_type === 'multi_question') {
             $ques = TestQuestion::where('test_id', $request->test_id)->get();
             for ($i = 0; $i < count($ques); $i++) {
                 if ($ques[$i]->question_type == 'multi_question') {
@@ -177,7 +152,6 @@ class TestController extends Controller
                     }
                 }
             }
-            //            }
 
             $answer = null;
             if ($request->question_type === 'multi_choice' || $request->question_type === 'multi_question') {
@@ -277,20 +251,13 @@ class TestController extends Controller
                 'question' => 'required|string',
             ]);
 
-            // Check If Question Number Already Exist
-            //            $checkQuestion = TestQuestion::where('question_number', $request->question_number)->where('test_id', $request->test_id)->first();
-            //            if (!empty($checkQuestion)) {
-            //                // If Question Exist, Return an Error to User
-            //                return response()->json(['error' => 'Question Number Already Exist'], 400);
-            //            }
-            //            $question_image = "";
-            // die;
             if ($request->hasFile('question_image')) {
                 $file = $request->file('question_image');
                 $name = uniqid() . '_' . $file->getClientOriginalName();
                 $file->move(public_path('/images'), $name);
                 $question_image = 'images/' . $name;
-                // die;
+            } else {
+                return response()->json("Check Image and Try Again", 401);
             }
 
             $media = Media::create([
@@ -298,8 +265,16 @@ class TestController extends Controller
                 'type' => 'image'
             ]);
 
+            if(empty($media)) {
+                return response()->json('Something went wrong! Please try again.', 401);
+            }
+
             foreach (json_decode($request->image_coords) as $key => $coords) {
-                $question = TestQuestion::where('test_id', $request->test_id)->where('question_number', $request->question_number + $key)->first();
+                $question_number = $request->question_number + $key;
+                $question = TestQuestion::where('test_id', $request->test_id)->where('question_number', $question_number)->first();
+                if(empty($question)) {
+                    return response()->json("Question number $question_number doesn't exist");
+                }
                 $question->update(['question_type' => 'image', 'q_count' => $key === 0 ? count(json_decode($request->image_coords)) : null]);
                 ImageQuestion::create([
                     'test_id' => $request->test_id,
@@ -441,22 +416,14 @@ class TestController extends Controller
         }])->find($id);
         foreach ($test->test_groups as $group) {
             $imageQuestions = [];
-            // loop through the test questions and add question to an array where question type is image
             foreach ($group->test_questions as $question) {
                 if ($question->question_type == 'image') {
-                    // $imageQuestion = ImageQuestion::where('question_id', $question->id)->first();
-                    // $media = Media::where('id', $imageQuestion->media_id)->first();
-                    // $question->image_coordinates = $imageQuestion->image_coordinates;
-                    // $question->question = $imageQuestion->question;
-                    // // $question->question_image = $imageQuestion->media->path;
-                    // $question->image_url = "http://localhost:8000/" . $media->path;
 
                     $imageQuestions[] = $question;
                 }
             }
             // loop through the test questions
             foreach ($group->test_questions as $question) {
-                // check if the question type is drag and drop, if yes then get the answer as hint array
                 if ($question->question_type == 'drag_and_drop') {
                     $dragQuestion = DragAndDrop::where('id', $question->dnd_id)->first();
                     $question->drag = $dragQuestion;
@@ -522,27 +489,6 @@ class TestController extends Controller
         if ($request->type === 'listening') {
             $test->audio = Media::find($test->media_id);
         }
-        // loop through the test groups
-        //        foreach ($test->test_groups as $group) {
-        //            // loop through the test questions
-        //            foreach ($group->test_questions as $question) {
-        //                // check if the question type is drag and drop, if yes then get the answer as hint array
-        //                if ($question->question_type == 'drag_and_drop') {
-        //                    // spread the answer to dragHints array
-        //
-        //                    // array_push($dragHints, ...json_decode($question->answer));
-        //                    $question->hints = json_decode($question->answer);
-        //                }
-        //                if ($question->question_type == 'image') {
-        //                    $imageQuestion = ImageQuestion::where('question_id', $question->id)->first();
-        //                    $media = Media::where('id', $imageQuestion->media_id)->first();
-        //                    $question->image_coordinates = $imageQuestion->image_coordinates;
-        //                    $question->question = $imageQuestion->question;
-        //                    // $question->question_image = $imageQuestion->media->path;
-        //                    $question->image_url = "http://localhost:8000/" . $media->path;
-        //                }
-        //            }
-        //        }
         foreach ($test->test_groups as $group) {
             $imageQuestions = [];
             // loop through the test questions and add question to an array where question type is image
