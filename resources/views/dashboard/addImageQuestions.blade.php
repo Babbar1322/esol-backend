@@ -103,7 +103,7 @@
             }).catch(err => {
                 // Showing Error Message at The Top of Form
                 color = 'danger';
-                message = err.response.data.error;
+                message = err.response.data.error ?? err.response.data.errors ? Object.values(err.response.data.errors).join('<br>') : err.response.data;
                 let alert =
                     `<div class="alert alert-${color} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`
                 $('#alert-box').empty().append(alert);

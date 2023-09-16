@@ -22,58 +22,57 @@ class TestController extends Controller
 {
     public function addNewTest(Request $request)
     {
-            // Validate the data that user send
-            $request->validate([
-                'test_name' => 'required|string',
-                'test_type' => 'required|string',
-                'test_time' => 'required|integer',
+        // Validate the data that user send
+        $request->validate([
+            'test_name' => 'required|string',
+            'test_type' => 'required|string',
+            'test_time' => 'required|integer',
+        ]);
+
+        if ($request->hasFile('test_audio')) {
+            $audio = $request->file('test_audio');
+            $audio_name = time() . $audio->getClientOriginalName();
+            $audio->move(public_path('uploads/audio'), $audio_name);
+            $audio_path = 'uploads/audio/' . $audio_name;
+            $media = Media::create([
+                'type' => 'audio',
+                'path' => $audio_path,
             ]);
+        }
 
-            if ($request->hasFile('test_audio')) {
-                $audio = $request->file('test_audio');
-                $audio_name = time() . $audio->getClientOriginalName();
-                $audio->move(public_path('uploads/audio'), $audio_name);
-                $audio_path = 'uploads/audio/' . $audio_name;
-                $media = Media::create([
-                    'type' => 'audio',
-                    'path' => $audio_path,
-                ]);
-            }
+        // Inserting data to tests table
+        $test = Test::create([
+            "test_name" => $request->test_name,
+            "test_type" => $request->test_type,
+            "time" => $request->test_time,
+            "media_id" => $media->id ?? null,
+        ]);
 
-            // Inserting data to tests table
-            $test = Test::create([
-                "test_name" => $request->test_name,
-                "test_type" => $request->test_type,
-                "time" => $request->test_time,
-                "media_id" => $media->id ?? null,
-            ]);
-
-            // Inserting data to test_groups for each group from array
-            return redirect("admin/add-test-groups/$test->id");
+        // Inserting data to test_groups for each group from array
+        return redirect("admin/add-test-groups/$test->id");
     }
 
     public function addTestGroup(Request $request)
     {
-            // Validate the data that user send
-            $request->validate([
-                'test_id' => 'required|integer',
-                'group_name' => 'required|string',
-            ]);
+        // Validate the data that user send
+        $request->validate([
+            'test_id' => 'required|integer',
+            'group_name' => 'required|string',
+        ]);
 
-            // Insterting data to test_groups for each group from array
-            TestGroup::create([
-                "test_id" => $request->test_id,
-                "group_name" => $request->group_name,
-                "group_content" => $request->group_content
-            ]);
-            return redirect()->back()->with('message', 'Group Added Successfully');
+        // Insterting data to test_groups for each group from array
+        TestGroup::create([
+            "test_id" => $request->test_id,
+            "group_name" => $request->group_name,
+            "group_content" => $request->group_content
+        ]);
+        return redirect()->back()->with('message', 'Group Added Successfully');
     }
 
     public function deleteTestGroup($id)
     {
         $testGroup = TestGroup::find($id);
-        if(!empty($testGroup))
-        {
+        if (!empty($testGroup)) {
             $testGroup->delete();
             return redirect()->back()->with('message', "Test Group {$testGroup->group_name} deleted successfully");
         }
@@ -126,246 +125,262 @@ class TestController extends Controller
 
     public function addTestQuestions(Request $request)
     {
-            // Checking The Validations for Incoming Data
-            $request->validate([
-                'test_id' => 'required|integer',
-                'groupId' => 'required',
-                'question_number' => 'required|integer',
-                'question_type' => 'required|string',
-                'answer' => 'required',
-                'marks' => 'required',
-            ]);
+        // Checking The Validations for Incoming Data
+        $request->validate([
+            'test_id' => 'required|integer',
+            'groupId' => 'required',
+            'question_number' => 'required|integer',
+            'question_type' => 'required|string',
+            'answer' => 'required',
+            'marks' => 'required',
+        ]);
 
-            // Check If Question Number Already Exist
-            $checkQuestion = TestQuestion::where('question_number', $request->question_number)->where('test_id', $request->test_id)->first();
-            if (!empty($checkQuestion)) {
-                // If Question Exist, Return an Error to User
-                return response()->json(['error' => 'Question Number Already Exist'], 401);
-            }
-            $ques = TestQuestion::where('test_id', $request->test_id)->get();
-            for ($i = 0; $i < count($ques); $i++) {
-                if ($ques[$i]->question_type == 'multi_question') {
-                    for ($j = $ques[$i]->question_number; $j < $ques[$i]->question_number + $ques[$i]->q_count; $j++) {
-                        if ($j == $request->question_number) {
-                            return response()->json(['error' => 'Question Number Already Exist'], 401);
-                        }
+        // Check If Question Number Already Exist
+        $checkQuestion = TestQuestion::where('question_number', $request->question_number)->where('test_id', $request->test_id)->first();
+        if (!empty($checkQuestion)) {
+            // If Question Exist, Return an Error to User
+            return response()->json(['error' => 'Question Number Already Exist'], 401);
+        }
+        $ques = TestQuestion::where('test_id', $request->test_id)->get();
+        for ($i = 0; $i < count($ques); $i++) {
+            if ($ques[$i]->question_type == 'multi_question') {
+                for ($j = $ques[$i]->question_number; $j < $ques[$i]->question_number + $ques[$i]->q_count; $j++) {
+                    if ($j == $request->question_number) {
+                        return response()->json(['error' => 'Question Number Already Exist'], 401);
                     }
                 }
             }
+        }
 
-            $answer = null;
-            if ($request->question_type === 'multi_choice' || $request->question_type === 'multi_question') {
-                $answer = json_encode($request->answer);
-            } elseif ($request->question_type === 'input') {
-                $answer = json_encode(explode(',', $request->answer[0]));
-            } else {
-                $answer = $request->answer[0];
+        $answer = null;
+        if ($request->question_type === 'multi_choice' || $request->question_type === 'multi_question') {
+            $elements = $request->answer;
+            foreach ($elements as &$element) {
+                $element = trim(preg_replace('/[\t\n\r\s]+/', ' ', $element));
             }
-
-            // If There's not any errors, Test will be inserted Successfully
-            TestQuestion::create([
-                "test_id" => $request->test_id,
-                "test_group_id" => $request->groupId,
-                "question_number" => $request->question_number,
-                "question_type" => $request->question_type,
-                "question" => $request->question,
-                "question_hint" => count($request->questionHint) > 0 ? json_encode($request->questionHint) : null,
-                "answer" => $answer,
-                "marks" => $request->marks,
-                "q_count" => $request->questionCount,
-            ]);
-
-            $group = TestGroup::where('id', $request->groupId)->first();
-            $group->update(['total_questions' => $group->total_questions + 1]);
-
-            $total = $request->question_number + $request->questionCount - 1;
-            if ($request->question_type === 'multi_question') {
-                return response()->json("Question Number $request->question_number to $total added successfully", 200);
+            $answer = json_encode($elements);
+        } elseif ($request->question_type === 'input') {
+            $elements = explode(',', $request->answer[0]);
+            foreach ($elements as &$element) {
+                $element = trim(preg_replace('/[\t\n\r\s]+/', ' ', $element));
             }
-            return response()->json("Question Number $request->question_number added successfully", 200);
+            $answer = json_encode($elements);
+            // $answer = json_encode(explode(',', $request->answer[0]));
+        } else {
+            $answer = trim(preg_replace('/[\t\n\r\s]+/', ' ', $request->answer[0]));
+        }
+        $questionHint = null;
+        if(count($request->questionHint) > 0) {
+            $elements = $request->questionHint;
+            foreach ($elements as &$element) {
+                $element = trim(preg_replace('/[\t\n\r\s]+/', ' ', $element));
+            }
+            $questionHint = json_encode($elements);
+        }
+
+        // If There's not any errors, Test will be inserted Successfully
+        TestQuestion::create([
+            "test_id" => $request->test_id,
+            "test_group_id" => $request->groupId,
+            "question_number" => $request->question_number,
+            "question_type" => $request->question_type,
+            "question" => $request->question,
+            "question_hint" => $questionHint,
+            "answer" => $answer,
+            "marks" => $request->marks,
+            "q_count" => $request->questionCount,
+        ]);
+
+        $group = TestGroup::where('id', $request->groupId)->first();
+        $group->update(['total_questions' => $group->total_questions + 1]);
+
+        $total = $request->question_number + $request->questionCount - 1;
+        if ($request->question_type === 'multi_question') {
+            return response()->json("Question Number $request->question_number to $total added successfully", 200);
+        }
+        return response()->json("Question Number $request->question_number added successfully", 200);
     }
 
     public function addDNDQuestions(Request $request)
     {
-            // Checking The Validations for Incoming Data
-            $request->validate([
-                'test_id' => 'required|integer',
-                'groupId' => 'required',
-                'question_number' => 'required|integer',
-                'question_type' => 'required|string',
-                'question' => 'required|string',
-                // 'questionHint' => 'required',
-                'answer' => 'required',
-                'marks' => 'required',
-            ]);
+        // Checking The Validations for Incoming Data
+        $request->validate([
+            'test_id' => 'required|integer',
+            'groupId' => 'required',
+            'question_number' => 'required|integer',
+            'question_type' => 'required|string',
+            'question' => 'required|string',
+            // 'questionHint' => 'required',
+            'answer' => 'required',
+            'marks' => 'required',
+        ]);
 
-            // Check If Question Number Already Exist
-            $checkQuestion = TestQuestion::where('question_number', $request->question_number)->where('test_id', $request->test_id)->first();
-            if (!empty($checkQuestion)) {
-                // If Question Exist, Return an Error to User
-                return response()->json(['error' => 'Question Number Already Exist'], 400);
-            }
+        // Check If Question Number Already Exist
+        $checkQuestion = TestQuestion::where('question_number', $request->question_number)->where('test_id', $request->test_id)->first();
+        if (!empty($checkQuestion)) {
+            // If Question Exist, Return an Error to User
+            return response()->json(['error' => 'Question Number Already Exist'], 400);
+        }
 
-            // Insert Main Drag and Drop Question
-            $dnd = DragAndDrop::create([
+        // Insert Main Drag and Drop Question
+        $dnd = DragAndDrop::create([
+            "test_id" => $request->test_id,
+            "test_group_id" => $request->groupId,
+            "question" => $request->question,
+        ]);
+
+        $elements = $request->answer;
+        foreach ($elements as &$element) {
+            $element = trim(preg_replace('/[\t\n\r\s]+/', ' ', $element));
+        }
+        $answers = $elements;
+        // $answers = $request->answer;
+        shuffle($answers);
+
+        // Insert TestQuestions with loop
+        collect($request->sub_questions)->map(function ($value, $index) use ($request, $dnd, $answers) {
+            TestQuestion::create([
                 "test_id" => $request->test_id,
                 "test_group_id" => $request->groupId,
-                "question" => $request->question,
+                "question_number" => $request->question_number + $index,
+                "question_type" => $request->question_type,
+                "question" => $value,
+                "question_hint" => json_encode($answers),
+                "answer" => $request->answer[$index],
+                "q_count" => count($request->sub_questions),
+                "dnd_id" => $dnd->id,
+                "marks" => $request->marks[$index],
             ]);
+        });
 
-            $answers = $request->answer;
-            shuffle($answers);
+        $group = TestGroup::where('id', $request->groupId)->first();
+        $group->update(['total_questions' => $group->total_questions + count(collect($request->sub_questions))]);
 
-            // Insert TestQuestions with loop
-            collect($request->sub_questions)->map(function ($value, $index) use ($request, $dnd, $answers) {
-                TestQuestion::create([
-                    "test_id" => $request->test_id,
-                    "test_group_id" => $request->groupId,
-                    "question_number" => $request->question_number + $index,
-                    "question_type" => $request->question_type,
-                    "question" => $value,
-                    "question_hint" => json_encode($answers),
-                    "answer" => $request->answer[$index],
-                    "q_count" => count($request->sub_questions),
-                    "dnd_id" => $dnd->id,
-                    "marks" => $request->marks[$index],
-                ]);
-            });
+        $q_number = $request->question_number;
+        $total_q = $q_number + count($request->sub_questions) - 1;
 
-            $group = TestGroup::where('id', $request->groupId)->first();
-            $group->update(['total_questions' => $group->total_questions + count(collect($request->sub_questions))]);
-
-            $q_number = $request->question_number;
-            $total_q = $q_number + count($request->sub_questions) - 1;
-
-            return response()->json("Questions from $q_number to $total_q added successfully", 200);
+        return response()->json("Questions from $q_number to $total_q added successfully", 200);
     }
 
     public function addImageQuestions(Request $request)
     {
-            // Checking The Validations for Incoming Data
-            $request->validate([
-                'test_id' => 'required|integer',
-                'groupId' => 'required',
-                'question_number' => 'required|integer',
-                'question' => 'required|string',
+        // Checking The Validations for Incoming Data
+        $request->validate([
+            'test_id' => 'required|integer',
+            'groupId' => 'required',
+            'question_number' => 'required|integer',
+            'question' => 'required|string',
+        ]);
+
+        if ($request->hasFile('question_image')) {
+            $file = $request->file('question_image');
+            $name = uniqid() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('/images'), $name);
+            $question_image = 'images/' . $name;
+        } else {
+            return response()->json("Check Image and Try Again", 401);
+        }
+
+        $media = Media::create([
+            'path' => $question_image,
+            'type' => 'image'
+        ]);
+
+        if (empty($media)) {
+            return response()->json('Something went wrong! Please try again.', 401);
+        }
+
+        foreach (json_decode($request->image_coords) as $key => $coords) {
+            $question_number = $request->question_number + $key;
+            $question = TestQuestion::where('test_id', $request->test_id)->where('question_number', $question_number)->first();
+            if (empty($question)) {
+                return response()->json("Question number $question_number doesn't exist", 401);
+            }
+            $question->update(['question_type' => 'image', 'q_count' => $key === 0 ? count(json_decode($request->image_coords)) : null]);
+            ImageQuestion::create([
+                'test_id' => $request->test_id,
+                'media_id' => $media->id,
+                'image_coordinates' => json_encode($coords),
+                'question_id' => $question->id,
+                'question_number' => $question->question_number,
+                'question' => $request->question,
             ]);
+        }
 
-            if ($request->hasFile('question_image')) {
-                $file = $request->file('question_image');
-                $name = uniqid() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('/images'), $name);
-                $question_image = 'images/' . $name;
-            } else {
-                return response()->json("Check Image and Try Again", 401);
-            }
+        $q_number = $request->question_number;
+        $total_q = $q_number + count(json_decode($request->image_coords)) - 1;
 
-            $media = Media::create([
-                'path' => $question_image,
-                'type' => 'image'
-            ]);
-
-            if(empty($media)) {
-                return response()->json('Something went wrong! Please try again.', 401);
-            }
-
-            foreach (json_decode($request->image_coords) as $key => $coords) {
-                $question_number = $request->question_number + $key;
-                $question = TestQuestion::where('test_id', $request->test_id)->where('question_number', $question_number)->first();
-                if(empty($question)) {
-                    return response()->json("Question number $question_number doesn't exist");
-                }
-                $question->update(['question_type' => 'image', 'q_count' => $key === 0 ? count(json_decode($request->image_coords)) : null]);
-                ImageQuestion::create([
-                    'test_id' => $request->test_id,
-                    'media_id' => $media->id,
-                    'image_coordinates' => json_encode($coords),
-                    'question_id' => $question->id,
-                    'question_number' => $question->question_number,
-                    'question' => $request->question,
-                ]);
-            }
-
-            $q_number = $request->question_number;
-            $total_q = $q_number + count(json_decode($request->image_coords)) - 1;
-
-            return response()->json("Questions from $q_number to $total_q added successfully", 200);
+        return response()->json("Questions from $q_number to $total_q added successfully", 200);
     }
 
     public function deleteQuestion(Request $request, $id)
     {
         $question = TestQuestion::find($id);
 
-        if(!empty($question)){
-        if($question->question_type === 'input' || $question->question_type === 'single_choice' || $question->question_type === 'multi_choice')
-        {
-            $question->delete();
-            return redirect()->back()->with('message', "Question {$question->question_number} delete successfully");
-        }
-
-        if($question->question_type === 'multi_question')
-        {
-            $question->delete();
-            $question_last_number = $question->question_number + $question->q_count;
-            return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
-        }
-
-        if($question->question_type === 'image')
-        {
-            $imageQuestion = ImageQuestion::where('question_id', $question->id)->where('question_number', $question->question_number)->first();
-            $media = Media::find($imageQuestion->media_id);
-            if(\File::exists(public_path($media->path)))
-            {
-                \File::delete(public_path($media->path));
+        if (!empty($question)) {
+            if ($question->question_type === 'input' || $question->question_type === 'single_choice' || $question->question_type === 'multi_choice') {
+                $question->delete();
+                return redirect()->back()->with('message', "Question {$question->question_number} delete successfully");
             }
-            $media->delete();
-            for($i = 0; $i < $question->q_count; $i++)
-            {
-                TestQuestion::where('question_number', $question->question_number + $i)->where('test_group_id', $question->test_group_id)->where('test_id', $question->test_id)->delete();
+
+            if ($question->question_type === 'multi_question') {
+                $question->delete();
+                $question_last_number = $question->question_number + $question->q_count - 1;
+                return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
             }
-            $imageQuestion->delete();
-            $question_last_number = $question->question_number + $question->q_count;
 
-            return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
-        }
+            if ($question->question_type === 'image') {
+                $imageQuestion = ImageQuestion::where('question_id', $question->id)->where('question_number', $question->question_number)->first();
+                $media = Media::find($imageQuestion->media_id);
+                if (\File::exists(public_path($media->path))) {
+                    \File::delete(public_path($media->path));
+                }
+                $media->delete();
+                for ($i = 0; $i < $question->q_count; $i++) {
+                    TestQuestion::where('question_number', $question->question_number + $i)->where('test_group_id', $question->test_group_id)->where('test_id', $question->test_id)->delete();
+                }
+                $imageQuestion->delete();
+                $question_last_number = $question->question_number + $question->q_count - 1;
 
-        if($question->question_type === 'drag_and_drop')
-        {
-            DragAndDrop::find($question->dnd_id)->delete();
-            TestQuestion::where('dnd_id', $question->dnd_id)->delete();
-            $question_last_number = $question->question_number + $question->q_count;
-            return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
+                return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
+            }
+
+            if ($question->question_type === 'drag_and_drop') {
+                DragAndDrop::find($question->dnd_id)->delete();
+                TestQuestion::where('dnd_id', $question->dnd_id)->delete();
+                $question_last_number = $question->question_number + $question->q_count;
+                return redirect()->back()->with('message', "Question {$question->question_number} to {$question_last_number} deleted successfully");
+            }
+            $totalQuestions = TestQuestion::where('test_group_id', $question->test_group_id)->count();
+            TestGroup::where('test_group_id', $question->test_group_id)->update(['total_questions' => $totalQuestions]);
         }
-        $totalQuestions = TestQuestion::where('test_group_id', $question->test_group_id)->count();
-        TestGroup::where('test_group_id', $question->test_group_id)->update(['total_questions' => $totalQuestions]);
-    }
 
         return redirect()->back()->withErrors('error', 'Something went wrong');
     }
 
     public function combineTests(Request $request)
     {
-            $request->validate([
-                'name' => 'required|string',
-                'reading_test_id' => 'required|integer',
-                'listening_test_id' => 'required|integer',
-                'writing_test_id' => 'required|integer',
-            ]);
-            $combineTest = new CombineTest;
-            $combineTest->create([
-                'name' => $request->name,
-                'reading_test_id' => $request->reading_test_id,
-                'listening_test_id' => $request->listening_test_id,
-                'writing_test_id' => $request->writing_test_id,
-            ]);
-            // update test Is Combined
-            $readingTest = Test::where('id', $request->reading_test_id)->first();
-            $readingTest->update(['is_combined' => 1]);
-            $listeningTest = Test::where('id', $request->listening_test_id)->first();
-            $listeningTest->update(['is_combined' => 1]);
-            $writingTest = Test::where('id', $request->writing_test_id)->first();
-            $writingTest->update(['is_combined' => 1]);
-            return redirect()->back()->with('success', 'Test Combined Successfully');
+        $request->validate([
+            'name' => 'required|string',
+            'reading_test_id' => 'required|integer',
+            'listening_test_id' => 'required|integer',
+            'writing_test_id' => 'required|integer',
+        ]);
+        $combineTest = new CombineTest;
+        $combineTest->create([
+            'name' => $request->name,
+            'reading_test_id' => $request->reading_test_id,
+            'listening_test_id' => $request->listening_test_id,
+            'writing_test_id' => $request->writing_test_id,
+        ]);
+        // update test Is Combined
+        $readingTest = Test::where('id', $request->reading_test_id)->first();
+        $readingTest->update(['is_combined' => 1]);
+        $listeningTest = Test::where('id', $request->listening_test_id)->first();
+        $listeningTest->update(['is_combined' => 1]);
+        $writingTest = Test::where('id', $request->writing_test_id)->first();
+        $writingTest->update(['is_combined' => 1]);
+        return redirect()->back()->with('success', 'Test Combined Successfully');
     }
 
     public function getAllTest(Request $request)
@@ -414,14 +429,16 @@ class TestController extends Controller
         $test = Test::with(['test_groups.test_questions' => function ($query) {
             $query->orderBy('question_number');
         }])->find($id);
+        $combinedTest = CombineTest::where("{$test->test_type}_test_id", $test->id)->first();
         foreach ($test->test_groups as $group) {
-            $imageQuestions = [];
-            foreach ($group->test_questions as $question) {
-                if ($question->question_type == 'image') {
+            // $imageQuestions = [];
+            // foreach ($group->test_questions as $question) {
+            //     if ($question->question_type == 'image') {
 
-                    $imageQuestions[] = $question;
-                }
-            }
+            //         $imageQuestions[] = $question;
+            //     }
+            // }
+            $preMedia = 0;
             // loop through the test questions
             foreach ($group->test_questions as $question) {
                 if ($question->question_type == 'drag_and_drop') {
@@ -432,15 +449,36 @@ class TestController extends Controller
                 if ($question->question_type == 'image') {
                     $imageQuestion = ImageQuestion::where('question_id', $question->id)->first();
                     $media = Media::where('id', $imageQuestion->media_id)->first();
+
+                    $imageQuestions = TestQuestion::select('test_questions.*', 'img.image_coordinates', 'img.question_number')->join('image_questions as img', 'img.question_id', 'test_questions.id')->where('img.media_id', $media->id)->get();
+                    // dd($imageQuestions);
+                    // foreach ($group->test_questions as $question) {
+                    //     // $a++;
+                    //         $imageQuestions[] = $question;
+                    // }
+                    // dd($media);
+                    // die;
                     $question->image_coordinates = json_decode($imageQuestion->image_coordinates);
                     $question->question = $imageQuestion->question;
-                    // $question->question_image = $imageQuestion->media->path;
-                    $question->image_url = $media->path;
+                    // // $question->question_image = $imageQuestion->media->path;
+                    $question->image_url = "https://raazbook.com/esol-new/" . $media->path;
+                    if ($preMedia != $media->id) {
+                        $preMedia = $media->id;
+                        $question->imageQuestions = $imageQuestions;
+                        // dd($imageQuestions);
+                        // print_r(json_encode($imageQuestions));
+                    }
+                    // $imageQuestion = ImageQuestion::where('question_id', $question->id)->first();
+                    // $media = Media::where('id', $imageQuestion->media_id)->first();
+                    // $question->image_coordinates = json_decode($imageQuestion->image_coordinates);
+                    // $question->question = $imageQuestion->question;
+                    // // $question->question_image = $imageQuestion->media->path;
+                    // $question->image_url = $media->path;
                     $question->imageQuestions = $imageQuestions;
                 }
             }
         }
-        return view('dashboard.previewTest', compact('test'));
+        return view('dashboard.previewTest', compact('test', 'combinedTest'));
     }
 
     public function takeTest(Request $request)
@@ -485,27 +523,22 @@ class TestController extends Controller
     public function getTestDetails(Request $request)
     {
         // Find Test
-        $test = Test::with('test_groups.test_questions')->find($request->id);
+        $test = Test::with('test_groups.test_questions')->findOrFail($request->id);
         if ($request->type === 'listening') {
             $test->audio = Media::find($test->media_id);
         }
+        $a = 1;
+        $preMedia = 0;
         foreach ($test->test_groups as $group) {
-            $imageQuestions = [];
+            // $a++;
+            // $imageQuestions = [];
             // loop through the test questions and add question to an array where question type is image
-            foreach ($group->test_questions as $question) {
-                if ($question->question_type == 'image') {
-                    $imageQuestion = ImageQuestion::where('question_id', $question->id)->first();
-                    $media = Media::where('id', $imageQuestion->media_id)->first();
-                    $question->image_coordinates = $imageQuestion->image_coordinates;
-                    $question->question = $imageQuestion->question;
-                    // $question->question_image = $imageQuestion->media->path;
-                    $question->image_url = "http://localhost:8000/" . $media->path;
 
-                    $imageQuestions[] = $question;
-                }
-            }
-            // loop through the test questions
+            // dd($imageQuestions);
+            // echo "<br>";
+            // // loop through the test questions
             foreach ($group->test_questions as $question) {
+
                 // check if the question type is drag and drop, if yes then get the answer as hint array
                 if ($question->question_type == 'drag_and_drop') {
                     $dragQuestion = DragAndDrop::where('id', $question->dnd_id)->first();
@@ -513,16 +546,36 @@ class TestController extends Controller
                     $question->hints = json_decode($question->answer);
                 }
                 if ($question->question_type == 'image') {
+
                     $imageQuestion = ImageQuestion::where('question_id', $question->id)->first();
                     $media = Media::where('id', $imageQuestion->media_id)->first();
+
+                    $imageQuestions = TestQuestion::select('test_questions.*', 'img.image_coordinates', 'img.question_number')->join('image_questions as img', 'img.question_id', 'test_questions.id')->where('img.media_id', $media->id)->get();
+                    // dd($imageQuestions);
+                    // foreach ($group->test_questions as $question) {
+                    //     // $a++;
+                    //         $imageQuestions[] = $question;
+                    // }
+                    // dd($media);
+                    // die;
                     $question->image_coordinates = $imageQuestion->image_coordinates;
                     $question->question = $imageQuestion->question;
-                    // $question->question_image = $imageQuestion->media->path;
+                    // // $question->question_image = $imageQuestion->media->path;
                     $question->image_url = "https://raazbook.com/esol-new/" . $media->path;
-                    $question->imageQuestions = json_encode($imageQuestions);
+                    if ($preMedia != $media->id) {
+                        $preMedia = $media->id;
+                        $question->imageQuestions = json_encode($imageQuestions);
+                        // dd($imageQuestions);
+                        // print_r(json_encode($imageQuestions));
+                    }
+                    // $a++;
+                    // dd($imageQuestions);
                 }
             }
         }
+        // echo $a;
+        // dd($a);
+        // die;
         return response()->json($test, 200);
     }
 
@@ -537,19 +590,19 @@ class TestController extends Controller
         // Stored the Time when User Submit the Test
         $submit_time = round(microtime(true) * 1000);
 
+        $correct_count = 0;
         // Instering Data into submitted_tests for each question
         foreach ($request->questionValues as $q_number => $question) {
             // Find Question to match the answer
             $testQuestion = TestQuestion::find($question['question_id']);
 
             // If Question Type is multi_choice then this will match the answer values from array
-            $correct_count = 0;
             if ($question['question_type'] === 'multi_choice') {
                 // By Default it will correct
                 $is_correct = 1;
 
                 // Convert json to array that retrieved from database
-                $answer = json_decode(json_decode($testQuestion->answer));
+                $answer = json_decode($testQuestion->answer);
 
                 // This value of the answer by user
                 $user_input = $question['value'];
@@ -568,7 +621,7 @@ class TestController extends Controller
                 }
 
                 if ($is_correct === 1) {
-                    $correct_count++;
+                    $correct_count += $testQuestion->marks;
                 }
 
                 // Inserting Data into Table for question and the result
@@ -588,7 +641,7 @@ class TestController extends Controller
                 $is_correct = 1;
 
                 // Convert json to array that retrieved from database
-                $answer = json_decode(json_decode($testQuestion->answer));
+                $answer = json_decode($testQuestion->answer);
 
                 // This value of the answer by user
                 $user_input = $question['value'];
@@ -602,12 +655,13 @@ class TestController extends Controller
                 $matchAnswers = array_intersect($answer, $filter_answers);
 
                 // Checking if original answer's length is equal to matched answer values
-                //                if (count($answer) !== count($matchAnswers)) {
-                //                    $is_correct = 0;
-                //                }
+                // if (count($answer) !== count($matchAnswers)) {
+                //     $is_correct = 0;
+                // }
+                // dd($testQuestion->marks * count($matchAnswers));
 
-                if (count($matchAnswers) < 1) {
-                    $correct_count++;
+                if (count($matchAnswers) > 0) {
+                    $correct_count += $testQuestion->marks * count($matchAnswers);
                 } else {
                     $is_correct = 0;
                 }
@@ -622,9 +676,9 @@ class TestController extends Controller
                     'question_value' => json_encode($filter_answers),
                     'is_correct' => $is_correct,
                     'allocated_test_id' => $request->allocated_test_id,
-                    'marks' => count($matchAnswers),
+                    'marks' => $testQuestion->marks * count($matchAnswers),
                 ]);
-            } else if ($question['question_type'] === 'input') {
+            } else if ($question['question_type'] === 'input' || $question['question_type'] === 'image') {
                 $is_correct = 0;
                 foreach (json_decode($testQuestion->answer) as $key => $value) {
                     if ($value === $question['value']) {
@@ -632,7 +686,7 @@ class TestController extends Controller
                     }
                 }
                 if ($is_correct === 1) {
-                    $correct_count++;
+                    $correct_count += $testQuestion->marks;
                 }
                 SubmittedTest::create([
                     'test_id' => $testQuestion->test_id,
@@ -643,13 +697,14 @@ class TestController extends Controller
                     'question_value' => $question['value'],
                     'is_correct' => $is_correct,
                     'allocated_test_id' => $request->allocated_test_id,
-                    'marks' => $is_correct ? $testQuestion->marks : 0,
+                    'marks' => $is_correct === 1 ? $testQuestion->marks : 0,
                 ]);
             } else {
+                // dd($question);
                 // If Question Type is not multi_choice then this will match the answer value with original answer
                 $is_correct = $testQuestion->answer == $question['value'];
                 if ($is_correct) {
-                    $correct_count++;
+                    $correct_count += $testQuestion->marks;
                 }
                 SubmittedTest::create([
                     'test_id' => $testQuestion->test_id,

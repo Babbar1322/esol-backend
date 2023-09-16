@@ -48,10 +48,10 @@
                 @foreach ($data as $test)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $test->user->name }}</td>
+                    <td>{{ $test->user->name ?? "" }}</td>
                     <td>{{ $test->test && $test->test->name }}</td>
                     <td>
-                        {{ $test->test->reading_test->test_name }}<br>
+                        {{ $test->test->reading_test->test_name ?? "" }}<br>
                         @if($test->reading_test_status == 0)
                         <span class="badge bg-success">Pending</span>
                         @elseif($test->reading_test_status == 1)
@@ -63,7 +63,7 @@
                         @endif
                     </td>
                     <td>
-                        {{ $test->test->listening_test->test_name }}<br>
+                        {{ $test->test->listening_test->test_name ?? "" }}<br>
                         @if($test->listening_test_status == 0)
                         <span class="badge bg-success">Pending</span>
                         @elseif($test->listening_test_status == 1)
@@ -75,7 +75,7 @@
                         @endif
                     </td>
                     <td>
-                        {{ $test->test->writing_test->test_name }}<br>
+                        {{ $test->test->writing_test->test_name ?? "" }}<br>
                         @if($test->writing_test_status == 0)
                         <span class="badge bg-success">Pending</span>
                         @elseif($test->writing_test_status == 1)

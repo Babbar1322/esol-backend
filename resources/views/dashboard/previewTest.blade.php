@@ -6,6 +6,9 @@
             <li class="breadcrumb-item"><a>Test</a></li>
             <li class="breadcrumb-item active" aria-current="page">Preview Test</li>
         </ol>
+        @if($combinedTest)
+            <h4 class="main-title mb-2">Combined Test - {{$combinedTest->name}}</h4>
+        @endif
         <h4 class="main-title mb-0">Preview {{$test->test_name}}</h4>
     </div>
 </div>
@@ -45,7 +48,7 @@
                                     <div class="fs-6 mb-2 text-decoration-underline">{{$question->question}}</div>
                                     @foreach(json_decode($question->question_hint) as $hint)
                                     <div class="mb-1 ms-5">
-                                        <input class="form-check-input" type="checkbox" value="{{$hint}}"
+                                        <input class="form-check-input" type="checkbox"  value="{{$hint}}"
                                             id="hint-{{$question->question_number}}-{{$loop->iteration}}">
                                         <label class="form-check-label"
                                             for="hint-{{$question->question_number}}-{{$loop->iteration}}">
@@ -54,6 +57,7 @@
                                     </div>
                                     @endforeach
                                 </div>
+                                <p>{{implode(", ", json_decode($question->answer))}}</p>
                             </div>
                             <div class="col-1">
                                 <a href="{{route('admin.delete-test', ['id' => $question->id])}}" class="btn btn-danger">
@@ -68,7 +72,12 @@
                                 <div class="mb-3">
                                     <label for="" class="form-label">Question - {{$question->question_number}}</label>
                                     <div class="fs-6 mb-2 text-decoration-underline">{{$question->question}}</div>
-                                    <p class="border">{{$question->answer}}</p>
+                                    <p class="border">
+                                        {{implode(", ", json_decode($question->answer))}}
+                                        {{-- @foreach(json_decode($question->answer) as $value)
+                                            {{ $value }}@if(!$loop->last), @endif
+                                        @endforeach --}}
+                                    </p>
                                 </div>
                             </div>
                             <div class="col-1">
@@ -92,6 +101,7 @@
                                             </label>
                                         </div>
                                     @endforeach
+                                    <p>Answer - {{$question->answer}}</p>
                                 </div>
                             </div>
                             <div class="col-1">
@@ -117,6 +127,7 @@
                                         </label>
                                     </div>
                                     @endforeach
+                                    <p>Answers - {{implode(", ", json_decode($question->answer))}}</p>
                                 </div>
                             </div>
                             <div class="col-1">
@@ -154,7 +165,7 @@
                                 <div class="fs-6 mb-2 text-decoration-underline">{{$question->question}}</div>
                                 <img src="{{asset($question->image_url)}}" alt="" style="width: 500px">
                                 @foreach ($question->imageQuestions as $imgQ)
-                                <div class="position-absolute bg-white border rounded-1 p-1" style="top: {{$imgQ->image_coordinates->y}}px; left: {{$imgQ->image_coordinates->x}}px">
+                                <div class="position-absolute bg-white border rounded-1 p-1" style="top: {{json_decode($imgQ->image_coordinates)->y}}px; left: {{json_decode($imgQ->image_coordinates)->x}}px">
                                     <p class="m-0">{{implode(json_decode($imgQ->answer))}}</p>
                                 </div>
                                 @endforeach

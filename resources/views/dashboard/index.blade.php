@@ -119,19 +119,4 @@
             </div>
         </div>
     </div>
-
-    {{-- <div class="card card-one mt-3 shadow">
-        <div class="card-header">
-            <h6 class="card-title">Organic Visits &amp; Conversions</h6>
-            <nav class="nav nav-icon nav-icon-sm ms-auto">
-                <a href="#" class="nav-link"><i class="ri-refresh-line"></i></a>
-                <a href="#" class="nav-link"><i class="ri-more-2-fill"></i></a>
-            </nav>
-        </div>
-        <div class="card-body p-3">
-            <div class="card-body">
-                <div id="flotChart4" class="flot-chart flot-chart-one ht-300"></div>
-            </div>
-        </div>
-    </div> --}}
 @endsection
